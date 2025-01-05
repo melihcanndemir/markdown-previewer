@@ -8,21 +8,24 @@ function MarkdownPreview({ markdown, isDark, settings }) {
     <div
       className={`rounded-lg ${
         isDark ? "bg-slate-800" : "bg-white border border-slate-200"
-      } p-4 shadow-xl`}
+      } p-2 sm:p-4 shadow-xl`}
     >
       <h2
-        className={`text-xl font-semibold mb-4 ${
+        className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-4 ${
           isDark ? "text-purple-400" : "text-purple-600"
         }`}
       >
         Preview
       </h2>
       <div
-        className={`prose max-w-none ${isDark ? "prose-invert" : ""} ${
-          PREVIEW_STYLES[settings.previewStyle]
-        }`}
+        className={`prose prose-sm sm:prose max-w-none ${
+          isDark
+            ? "prose-invert prose-p:text-white prose-headings:text-white prose-strong:text-white prose-em:text-gray-100 prose-code:text-gray-100"
+            : ""
+        } ${PREVIEW_STYLES[settings.previewStyle]}`}
         style={{
           fontSize: FONT_SIZES[settings.fontSize],
+          color: isDark ? "#ffffff" : "inherit",
         }}
       >
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>

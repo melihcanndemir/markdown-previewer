@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import PropTypes from 'prop-types';
-import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 
-const FONT_SIZES = {
-  small: '14px',
-  medium: '16px',
-  large: '18px',
+export const FONT_SIZES = {
+  small: "14px",
+  medium: "16px",
+  large: "18px",
 };
 
-const PREVIEW_STYLES = {
-  default: 'prose-slate',
-  github: 'prose-neutral',
-  elegant: 'prose-stone',
+export const PREVIEW_STYLES = {
+  default: "prose-slate",
+  github: "prose-neutral",
+  elegant: "prose-stone",
 };
 
 function Settings({ isDark, settings, onSettingsChange }) {
@@ -22,33 +22,37 @@ function Settings({ isDark, settings, onSettingsChange }) {
       {/* Settings Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`p-2 rounded-lg ${
+        className={`p-1.5 sm:p-2 rounded-lg ${
           isDark
-            ? 'bg-slate-700 hover:bg-slate-600'
-            : 'bg-slate-200 hover:bg-slate-300'
+            ? "bg-slate-700 hover:bg-slate-600"
+            : "bg-slate-200 hover:bg-slate-300"
         }`}
         title="Settings"
       >
-        <Cog6ToothIcon className="w-5 h-5" />
+        <Cog6ToothIcon className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       {/* Settings Panel */}
       {isOpen && (
         <div
-          className={`absolute right-0 mt-2 w-64 p-4 rounded-lg shadow-xl z-50 ${
-            isDark ? 'bg-slate-800' : 'bg-white border border-slate-200'
+          className={`absolute right-0 mt-2 w-56 sm:w-64 p-3 sm:p-4 rounded-lg shadow-xl z-50 ${
+            isDark ? "bg-slate-800" : "bg-white border border-slate-200"
           }`}
         >
           {/* Font Size */}
-          <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">Font Size</label>
+          <div className="mb-3 sm:mb-4">
+            <label className="block mb-1 sm:mb-2 text-sm font-medium">
+              Font Size
+            </label>
             <select
               value={settings.fontSize}
-              onChange={(e) => onSettingsChange({ ...settings, fontSize: e.target.value })}
-              className={`w-full p-2 rounded-lg ${
+              onChange={(e) =>
+                onSettingsChange({ ...settings, fontSize: e.target.value })
+              }
+              className={`w-full p-1.5 sm:p-2 text-sm rounded-lg ${
                 isDark
-                  ? 'bg-slate-700 border-slate-600'
-                  : 'bg-slate-50 border-slate-200'
+                  ? "bg-slate-700 border-slate-600"
+                  : "bg-slate-50 border-slate-200"
               }`}
             >
               <option value="small">Small</option>
@@ -58,17 +62,19 @@ function Settings({ isDark, settings, onSettingsChange }) {
           </div>
 
           {/* Preview Style */}
-          <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">Preview Style</label>
+          <div className="mb-3 sm:mb-4">
+            <label className="block mb-1 sm:mb-2 text-sm font-medium">
+              Preview Style
+            </label>
             <select
               value={settings.previewStyle}
               onChange={(e) =>
                 onSettingsChange({ ...settings, previewStyle: e.target.value })
               }
-              className={`w-full p-2 rounded-lg ${
+              className={`w-full p-1.5 sm:p-2 text-sm rounded-lg ${
                 isDark
-                  ? 'bg-slate-700 border-slate-600'
-                  : 'bg-slate-50 border-slate-200'
+                  ? "bg-slate-700 border-slate-600"
+                  : "bg-slate-50 border-slate-200"
               }`}
             >
               <option value="default">Default</option>
@@ -78,7 +84,7 @@ function Settings({ isDark, settings, onSettingsChange }) {
           </div>
 
           {/* Line Numbers */}
-          <div className="mb-4">
+          <div className="mb-3 sm:mb-4">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -96,7 +102,7 @@ function Settings({ isDark, settings, onSettingsChange }) {
           </div>
 
           {/* Auto Save */}
-          <div className="mb-4">
+          <div className="mb-3 sm:mb-4">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -129,5 +135,4 @@ Settings.propTypes = {
   onSettingsChange: PropTypes.func.isRequired,
 };
 
-export { FONT_SIZES, PREVIEW_STYLES };
 export default Settings;
