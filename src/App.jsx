@@ -184,7 +184,7 @@ function App() {
                 by
               </span>
               <a
-                href="https://github.com/melihcandemir"
+                href="https://github.com/melihcanndemir"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`font-medium transition-colors duration-200 ${
