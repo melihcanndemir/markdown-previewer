@@ -6,29 +6,70 @@ import { FONT_SIZES, PREVIEW_STYLES } from "./Settings";
 function MarkdownPreview({ markdown, isDark, settings }) {
   return (
     <div
-      className={`rounded-lg ${
-        isDark ? "bg-slate-800" : "bg-white border border-slate-200"
-      } p-2 sm:p-4 shadow-xl`}
+      className={`
+        rounded-lg
+        ${isDark ? "bg-slate-800" : "bg-white border border-slate-200"}
+        p-4 shadow-xl
+        // Burada da overflow-auto ekleyebilirsin, istersen
+      `}
     >
       <h2
-        className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-4 ${
-          isDark ? "text-purple-400" : "text-purple-600"
-        }`}
+        className={`
+          text-xl font-semibold mb-4
+          ${isDark ? "text-purple-400" : "text-purple-600"}
+        `}
       >
         Preview
       </h2>
+
+      {/* İçerik kapsayıcısı */}
       <div
-        className={`prose prose-sm sm:prose max-w-none ${
-          isDark
-            ? "prose-invert prose-p:text-white prose-headings:text-white prose-strong:text-white prose-em:text-gray-100 prose-code:text-gray-100"
-            : ""
-        } ${PREVIEW_STYLES[settings.previewStyle]}`}
+        className={`
+          prose
+          max-w-none
+          ${isDark ? "prose-invert" : ""}
+          ${PREVIEW_STYLES[settings.previewStyle]}
+          whitespace-pre-wrap
+          // İçerik uzayabilsin, kaydırılabilsin
+          overflow-auto
+        `}
         style={{
           fontSize: FONT_SIZES[settings.fontSize],
-          color: isDark ? "#ffffff" : "inherit",
+          // Çok büyük içeriklerde kısmen ekrana sığması için maxHeight kullanabilirsin
+          // maxHeight: "80vh"
         }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Kod bloklarına özel bir render ekliyoruz
+            code({ inline, className, children, ...props }) {
+              return inline ? (
+                <code
+                  className={`bg-slate-700 text-slate-100 px-1 py-0.5 rounded ${className}`}
+                  {...props}
+                >
+                  {children}
+                </code>
+              ) : (
+                <pre
+                  className={`
+                    bg-slate-700
+                    text-slate-100
+                    p-3
+                    rounded-md
+                    overflow-auto
+                  `}
+                  {...props}
+                >
+                  <code className="whitespace-pre">{children}</code>
+                </pre>
+              );
+            },
+          }}
+        >
+          {markdown}
+        </ReactMarkdown>
       </div>
     </div>
   );
