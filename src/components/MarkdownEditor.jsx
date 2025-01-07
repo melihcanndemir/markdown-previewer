@@ -385,9 +385,8 @@ MarkdownEditor.propTypes = {
   settings: PropTypes.shape({
     fontSize: PropTypes.string.isRequired,
     showLineNumbers: PropTypes.bool.isRequired,
-    editorHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-      .isRequired,
     showToolbar: PropTypes.bool.isRequired,
+    editorHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }).isRequired,
   isFullScreen: PropTypes.bool.isRequired,
   onFullScreenToggle: PropTypes.func.isRequired,

@@ -124,7 +124,21 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [markdown]);
 
-  // F11 tuşu için klavye dinleyicisi
+  const toggleFullScreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullScreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullScreen(false);
+      }
+    } catch (error) {
+      console.error("Fullscreen mode failed:", error);
+    }
+  }, []);
+
+  // F11 key listener
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "F11") {
@@ -145,20 +159,6 @@ function App() {
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
     };
   }, [toggleFullScreen]);
-
-  const toggleFullScreen = useCallback(async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-        setIsFullScreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullScreen(false);
-      }
-    } catch (error) {
-      console.error("Fullscreen mode failed:", error);
-    }
-  }, []);
 
   return (
     <div
