@@ -1,9 +1,19 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import PropTypes from "prop-types";
-import { FONT_SIZES, PREVIEW_STYLES } from "./Settings";
+import { FONT_SIZES, PREVIEW_STYLES } from "./constants";
+import {
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+} from "@heroicons/react/24/outline";
 
-function MarkdownPreview({ markdown, isDark, settings }) {
+function MarkdownPreview({
+  markdown,
+  isDark,
+  settings,
+  isFullScreen,
+  onFullScreenToggle,
+}) {
   return (
     <div
       className={`
@@ -12,15 +22,32 @@ function MarkdownPreview({ markdown, isDark, settings }) {
         p-4 shadow-xl flex flex-col
       `}
     >
-      <h2
-        className={`
-          text-xl font-semibold mb-2
-          ${isDark ? "text-purple-400" : "text-purple-600"}
-          flex-shrink-0
-        `}
-      >
-        Preview
-      </h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2
+          className={`
+            text-xl font-semibold mb-2
+            ${isDark ? "text-purple-400" : "text-purple-600"}
+            flex-shrink-0
+          `}
+        >
+          Preview
+        </h2>
+        <button
+          onClick={onFullScreenToggle}
+          className={`p-1.5 sm:p-2 rounded-lg transition-colors duration-200 ${
+            isDark
+              ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
+              : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
+          }`}
+          title={isFullScreen ? "Exit full screen" : "Enter full screen"}
+        >
+          {isFullScreen ? (
+            <ArrowsPointingInIcon className="w-5 h-5" />
+          ) : (
+            <ArrowsPointingOutIcon className="w-5 h-5" />
+          )}
+        </button>
+      </div>
 
       <div
         className={`
@@ -65,36 +92,31 @@ function MarkdownPreview({ markdown, isDark, settings }) {
           remarkPlugins={[remarkGfm]}
           components={{
             // Başlıklar için özel bileşen
-            h1: ({ node, ...props }) => (
-              <h1 className="mt-3 mb-2" {...props} />
-            ),
-            h2: ({ node, ...props }) => (
-              <h2 className="mt-2 mb-1" {...props} />
-            ),
-            h3: ({ node, ...props }) => (
-              <h3 className="mt-2 mb-1" {...props} />
-            ),
+            h1: ({ ...props }) => <h1 className="mt-3 mb-2" {...props} />,
+            h2: ({ ...props }) => <h2 className="mt-2 mb-1" {...props} />,
+            h3: ({ ...props }) => <h3 className="mt-2 mb-1" {...props} />,
             // Paragraflar için özel bileşen
-            p: ({ node, children, ...props }) => {
+            p: ({ children, parent, ...props }) => {
               // Eğer içerisinde img varsa
-              const hasImage = node?.children?.some(child => child.type === 'image');
+              const hasImage = parent?.children?.some(
+                (child) => child.type === "image"
+              );
               return (
-                <p className={`my-1 ${hasImage ? 'inline-flex gap-2 flex-wrap' : ''}`} {...props}>
+                <p
+                  className={`my-1 ${
+                    hasImage ? "inline-flex gap-2 flex-wrap" : ""
+                  }`}
+                  {...props}
+                >
                   {children}
                 </p>
               );
             },
             // Listeler için özel bileşen
-            ul: ({ node, ...props }) => (
-              <ul className="my-1" {...props} />
-            ),
-            ol: ({ node, ...props }) => (
-              <ol className="my-1" {...props} />
-            ),
+            ul: ({ ...props }) => <ul className="my-1" {...props} />,
+            ol: ({ ...props }) => <ol className="my-1" {...props} />,
             // Liste öğeleri için özel bileşen
-            li: ({ node, ...props }) => (
-              <li className="my-0" {...props} />
-            ),
+            li: ({ ...props }) => <li className="my-0" {...props} />,
             // Kod blokları için özel bileşen
             code({ inline, className, children, ...props }) {
               return inline ? (
@@ -114,17 +136,13 @@ function MarkdownPreview({ markdown, isDark, settings }) {
               );
             },
             // Alıntılar için özel bileşen
-            blockquote: ({ node, ...props }) => (
+            blockquote: ({ ...props }) => (
               <blockquote className="my-2" {...props} />
             ),
             // Tablolar için özel bileşen
-            table: ({ node, ...props }) => (
-              <table className="my-2" {...props} />
-            ),
+            table: ({ ...props }) => <table className="my-2" {...props} />,
             // Yatay çizgi için özel bileşen
-            hr: ({ node, ...props }) => (
-              <hr className="my-2" {...props} />
-            ),
+            hr: ({ ...props }) => <hr className="my-2" {...props} />,
           }}
         >
           {markdown}
@@ -141,6 +159,8 @@ MarkdownPreview.propTypes = {
     fontSize: PropTypes.string.isRequired,
     previewStyle: PropTypes.string.isRequired,
   }).isRequired,
+  isFullScreen: PropTypes.bool.isRequired,
+  onFullScreenToggle: PropTypes.func.isRequired,
 };
 
 export default MarkdownPreview;

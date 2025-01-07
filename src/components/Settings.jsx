@@ -2,19 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 
-export const FONT_SIZES = {
-  small: "14px",
-  medium: "16px",
-  large: "18px",
-};
-
-export const PREVIEW_STYLES = {
-  default: "prose-slate",
-  github: "prose-neutral",
-  elegant: "prose-stone",
-};
-
-function Settings({ isDark, settings, onSettingsChange, isMobile, orientation }) {
+function Settings({
+  isDark,
+  settings,
+  onSettingsChange,
+  isMobile,
+  orientation,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const settingsRef = useRef(null);
@@ -39,19 +33,22 @@ function Settings({ isDark, settings, onSettingsChange, isMobile, orientation })
     // Determine vertical position
     if (spaceBelow >= menuRect.height || spaceBelow >= spaceAbove) {
       top = buttonRect.bottom + 8;
-      transformOrigin = 'top';
+      transformOrigin = "top";
     } else {
       top = buttonRect.top - menuRect.height - 8;
-      transformOrigin = 'bottom';
+      transformOrigin = "bottom";
     }
 
     // Determine horizontal position
     if (isMobile) {
       // Center the menu on mobile
-      left = Math.max(16, Math.min(
-        viewportWidth - menuRect.width - 16,
-        buttonRect.left + (buttonRect.width - menuRect.width) / 2
-      ));
+      left = Math.max(
+        16,
+        Math.min(
+          viewportWidth - menuRect.width - 16,
+          buttonRect.left + (buttonRect.width - menuRect.width) / 2
+        )
+      );
     } else if (spaceRight >= menuRect.width || spaceRight >= spaceLeft) {
       left = buttonRect.right - menuRect.width;
     } else {
@@ -97,25 +94,25 @@ function Settings({ isDark, settings, onSettingsChange, isMobile, orientation })
   // Handle window resize
   useEffect(() => {
     if (isOpen) {
-      window.addEventListener('resize', calculateMenuPosition);
-      return () => window.removeEventListener('resize', calculateMenuPosition);
+      window.addEventListener("resize", calculateMenuPosition);
+      return () => window.removeEventListener("resize", calculateMenuPosition);
     }
   }, [isOpen, calculateMenuPosition]);
 
   const toggleSettings = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   // Custom styles for the settings panel
   const menuStyles = {
-    position: 'fixed',
+    position: "fixed",
     top: `${menuPosition.top}px`,
     left: `${menuPosition.left}px`,
     transformOrigin: menuPosition.transformOrigin,
     zIndex: 50,
-    minWidth: isMobile ? 'calc(100vw - 32px)' : '280px',
-    maxWidth: isMobile ? 'calc(100vw - 32px)' : '320px',
-    maxHeight: 'calc(100vh - 32px)',
+    minWidth: isMobile ? "calc(100vw - 32px)" : "280px",
+    maxWidth: isMobile ? "calc(100vw - 32px)" : "320px",
+    maxHeight: "calc(100vh - 32px)",
   };
 
   return (
@@ -127,7 +124,7 @@ function Settings({ isDark, settings, onSettingsChange, isMobile, orientation })
           isDark
             ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
             : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
-        } ${isOpen ? 'ring-2 ring-purple-500' : ''}`}
+        } ${isOpen ? "ring-2 ring-purple-500" : ""}`}
         title="Settings"
         aria-label="Open settings menu"
         aria-expanded={isOpen}
@@ -182,7 +179,10 @@ function Settings({ isDark, settings, onSettingsChange, isMobile, orientation })
               <select
                 value={settings.previewStyle}
                 onChange={(e) =>
-                  onSettingsChange({ ...settings, previewStyle: e.target.value })
+                  onSettingsChange({
+                    ...settings,
+                    previewStyle: e.target.value,
+                  })
                 }
                 className={`w-full p-2 text-sm rounded-lg transition-colors ${
                   isDark
@@ -255,6 +255,21 @@ function Settings({ isDark, settings, onSettingsChange, isMobile, orientation })
                 <span className="text-sm font-medium">Sync Scrolling</span>
               </label>
             </div>
+
+            <div className="flex items-center justify-between gap-4 py-2">
+              <span className="text-sm">Toolbar</span>
+              <button
+                onClick={() =>
+                  onSettingsChange({
+                    ...settings,
+                    showToolbar: !settings.showToolbar,
+                  })
+                }
+                className={`...`}
+              >
+                {settings.showToolbar ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -270,6 +285,7 @@ Settings.propTypes = {
     showLineNumbers: PropTypes.bool.isRequired,
     autoSave: PropTypes.bool.isRequired,
     syncScroll: PropTypes.bool,
+    showToolbar: PropTypes.bool.isRequired,
   }).isRequired,
   onSettingsChange: PropTypes.func.isRequired,
   isMobile: PropTypes.bool.isRequired,

@@ -21,21 +21,27 @@ function App() {
     return saved || DEFAULT_MARKDOWN;
   });
 
+  // Theme state
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("markdown-theme");
     return saved ? JSON.parse(saved) : true;
   });
 
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
-  // Hamburger Menüsü için eklenen state
+  // Mobile menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Responsive states
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [orientation, setOrientation] = useState(
     window.screen.orientation?.type || "portrait"
   );
 
+  // Editor and Preview states
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+  const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Settings state
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem("markdown-settings");
     return saved
@@ -47,6 +53,7 @@ function App() {
           autoSave: true,
           editorHeight: "auto",
           syncScroll: true,
+          showToolbar: true,
         };
   });
 
@@ -105,7 +112,7 @@ function App() {
             break;
           case "b":
             e.preventDefault();
-            setIsFullScreen((prev) => !prev);
+            setIsEditorExpanded((prev) => !prev);
             break;
           default:
             break;
@@ -116,6 +123,42 @@ function App() {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [markdown]);
+
+  // F11 tuşu için klavye dinleyicisi
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "F11") {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    };
+
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("fullscreenchange", handleFullScreenChange);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", handleFullScreenChange);
+    };
+  }, [toggleFullScreen]);
+
+  const toggleFullScreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullScreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullScreen(false);
+      }
+    } catch (error) {
+      console.error("Fullscreen mode failed:", error);
+    }
+  }, []);
 
   return (
     <div
@@ -170,7 +213,7 @@ function App() {
                 </h1>
               </div>
 
-              {/* Mobilde hamburger menü butonu */}
+              {/* Mobile hamburger menu button */}
               {isMobile && (
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -189,7 +232,7 @@ function App() {
               )}
             </div>
 
-            {/* Toolbar & Settings (masaüstü görünümde her zaman, mobilde hamburger menüye bağlı) */}
+            {/* Toolbar & Settings (desktop: always visible, mobile: in hamburger menu) */}
             {!isMobile && (
               <div className="flex flex-nowrap items-center gap-2 sm:gap-4 justify-end w-full sm:w-auto">
                 <Toolbar
@@ -215,7 +258,9 @@ function App() {
                       ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
                       : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
                   }`}
-                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                  title={
+                    isDark ? "Switch to light mode" : "Switch to dark mode"
+                  }
                   aria-label={
                     isDark ? "Switch to light mode" : "Switch to dark mode"
                   }
@@ -229,13 +274,17 @@ function App() {
 
                 {/* Fullscreen Toggle */}
                 <button
-                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  onClick={toggleFullScreen}
                   className={`p-1.5 sm:p-2 rounded-lg transition-colors duration-200 ${
                     isDark
                       ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
                       : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
                   }`}
-                  title={isFullScreen ? "Exit full screen" : "Enter full screen"}
+                  title={
+                    isFullScreen
+                      ? "Exit full screen (F11)"
+                      : "Enter full screen (F11)"
+                  }
                   aria-label={
                     isFullScreen ? "Exit full screen" : "Enter full screen"
                   }
@@ -250,14 +299,14 @@ function App() {
             )}
           </div>
 
-          {/* M O B I L   M E N Ü */}
+          {/* Mobile Menu */}
           {isMobile && isMenuOpen && (
             <div
               className={`flex flex-col gap-3 mb-4 ${
                 isDark ? "bg-slate-800" : "bg-slate-200"
               } p-4 rounded-lg`}
             >
-              {/* Panel Başlığı ve Kapat Butonu */}
+              {/* Panel Header and Close Button */}
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-lg">Quick Actions</h2>
                 <button
@@ -278,7 +327,7 @@ function App() {
                 }`}
               />
 
-              {/* EDITOR TOOLS */}
+              {/* Editor Tools */}
               <div className="flex flex-col gap-2">
                 <span className="font-medium text-base">Editor Tools</span>
                 <Toolbar
@@ -286,6 +335,8 @@ function App() {
                   setMarkdown={setMarkdown}
                   isDark={isDark}
                   isMobile={isMobile}
+                  isFullScreen={isEditorExpanded}
+                  onFullScreenToggle={toggleFullScreen}
                 />
               </div>
 
@@ -295,7 +346,7 @@ function App() {
                 }`}
               />
 
-              {/* SETTINGS */}
+              {/* Settings */}
               <div className="flex flex-col gap-2">
                 <span className="font-medium text-base">Settings</span>
                 <Settings
@@ -313,7 +364,7 @@ function App() {
                 }`}
               />
 
-              {/* DİĞER BUTONLAR */}
+              {/* Other Buttons */}
               <div className="flex gap-3">
                 {/* Theme Toggle */}
                 <button
@@ -323,7 +374,9 @@ function App() {
                       ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
                       : "bg-slate-300 hover:bg-slate-400 active:bg-slate-500"
                   }`}
-                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                  title={
+                    isDark ? "Switch to light mode" : "Switch to dark mode"
+                  }
                   aria-label={
                     isDark ? "Switch to light mode" : "Switch to dark mode"
                   }
@@ -343,18 +396,20 @@ function App() {
 
                 {/* Fullscreen Toggle */}
                 <button
-                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  onClick={() => setIsEditorExpanded(!isEditorExpanded)}
                   className={`flex items-center justify-center p-2 w-full rounded-lg transition-colors duration-200 ${
                     isDark
                       ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
                       : "bg-slate-300 hover:bg-slate-400 active:bg-slate-500"
                   }`}
-                  title={isFullScreen ? "Exit full screen" : "Enter full screen"}
+                  title={
+                    isEditorExpanded ? "Exit full screen" : "Enter full screen"
+                  }
                   aria-label={
-                    isFullScreen ? "Exit full screen" : "Enter full screen"
+                    isEditorExpanded ? "Exit full screen" : "Enter full screen"
                   }
                 >
-                  {isFullScreen ? (
+                  {isEditorExpanded ? (
                     <>
                       <ArrowsPointingInIcon className="w-5 h-5 mr-1" />
                       Exit Full
@@ -371,26 +426,40 @@ function App() {
           )}
 
           {/* Main Content Area */}
-          <div
-            className={`grid gap-3 sm:gap-4 md:gap-6 flex-grow ${
-              isFullScreen ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-            }`}
-          >
-            {!isFullScreen && (
-              <MarkdownEditor
-                markdown={markdown}
-                setMarkdown={setMarkdown}
-                isDark={isDark}
-                settings={settings}
-                isMobile={isMobile}
-              />
-            )}
-            <MarkdownPreview
-              markdown={markdown}
-              isDark={isDark}
-              settings={settings}
-              isMobile={isMobile}
-            />
+          <div className="flex-grow flex flex-col">
+            <div
+              className={`grid gap-3 sm:gap-4 md:gap-6 ${
+                !isEditorExpanded && !isPreviewExpanded
+                  ? "grid-cols-1 lg:grid-cols-2"
+                  : "grid-cols-1"
+              }`}
+            >
+              {!isPreviewExpanded && (
+                <MarkdownEditor
+                  markdown={markdown}
+                  setMarkdown={setMarkdown}
+                  isDark={isDark}
+                  settings={settings}
+                  isFullScreen={isEditorExpanded}
+                  onFullScreenToggle={() => {
+                    setIsEditorExpanded(!isEditorExpanded);
+                    if (isPreviewExpanded) setIsPreviewExpanded(false);
+                  }}
+                />
+              )}
+              {!isEditorExpanded && (
+                <MarkdownPreview
+                  markdown={markdown}
+                  isDark={isDark}
+                  settings={settings}
+                  isFullScreen={isPreviewExpanded}
+                  onFullScreenToggle={() => {
+                    setIsPreviewExpanded(!isPreviewExpanded);
+                    if (isEditorExpanded) setIsEditorExpanded(false);
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
       </main>
