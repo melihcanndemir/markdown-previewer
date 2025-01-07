@@ -6,6 +6,12 @@ import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
 } from "@heroicons/react/24/outline";
+import { SyntaxHighlighter } from "react-syntax-highlighter";
+import {
+  oneDark,
+  oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypeRaw from "rehype-raw";
 
 function MarkdownPreview({
   markdown,
@@ -118,21 +124,21 @@ function MarkdownPreview({
             // Liste öğeleri için özel bileşen
             li: ({ ...props }) => <li className="my-0" {...props} />,
             // Kod blokları için özel bileşen
-            code({ inline, className, children, ...props }) {
-              return inline ? (
-                <code
-                  className={`bg-slate-700 text-slate-100 px-1 py-0.5 rounded ${className}`}
+            code({ node, inline, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return !inline && match ? (
+                <SyntaxHighlighter
                   {...props}
+                  style={isDark ? oneDark : oneLight}
+                  language={match[1]}
+                  PreTag="div"
                 >
+                  {String(children).replace(/\n$/, "")}
+                </SyntaxHighlighter>
+              ) : (
+                <code {...props} className={className}>
                   {children}
                 </code>
-              ) : (
-                <pre
-                  className="bg-slate-700 text-slate-100 p-3 rounded-md overflow-auto my-2"
-                  {...props}
-                >
-                  <code className="whitespace-pre">{children}</code>
-                </pre>
               );
             },
             // Alıntılar için özel bileşen
@@ -144,6 +150,7 @@ function MarkdownPreview({
             // Yatay çizgi için özel bileşen
             hr: ({ ...props }) => <hr className="my-2" {...props} />,
           }}
+          rehypePlugins={[rehypeRaw]}
         >
           {markdown}
         </ReactMarkdown>
