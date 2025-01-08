@@ -1,6 +1,8 @@
 # 📝 Markdown Previewer 
 
 ![Netlify Status](https://api.netlify.com/api/v1/badges/a11e7b0f-8713-4ebe-af30-c0fd819359f0/deploy-status)
+[![PWA Ready](https://img.shields.io/badge/PWA-ready-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+[![Accessibility Score](https://img.shields.io/badge/Accessibility-100%25-success.svg)](https://www.w3.org/WAI/standards-guidelines/aria/)
 
 > A sleek and modern markdown editor and previewer built with React + Vite ⚡
 
@@ -28,6 +30,11 @@
 - 🎯 Customizable settings
 - 📊 Optional line numbers
 - 🔄 Auto-save functionality
+- 📱 PWA support for native app experience
+- ♿ Full accessibility support with ARIA labels
+- 🔌 Offline functionality
+- 📲 Install on any device
+- 🎨 Adaptive interface
 
 ## 🚀 Live Demo
 
@@ -38,11 +45,13 @@ Try it out: [WebMarkdown](https://webmarkdown.netlify.app/)
 - **Frontend Framework:** React 18.3
 - **Build Tool:** Vite 6.0
 - **Styling:** Tailwind CSS 3.4
+- **PWA:** Vite PWA Plugin
 - **Key Dependencies:**
   - 🎨 @heroicons/react
   - 📝 react-markdown
   - ✨ remark-gfm
   - 🎯 PropTypes
+  - 📱 vite-plugin-pwa
 
 ## 💻 Local Development
 
@@ -74,6 +83,20 @@ npm run build
 - Toggle dark/light mode with the theme button
 - Use the settings button to customize your experience
 
+### PWA Features
+- Install as a native app
+- Work offline
+- Fast loading times
+- Home screen installation
+- App-like experience
+
+### Accessibility Features
+- Full keyboard navigation
+- ARIA labels for all interactive elements
+- High contrast mode support
+- Screen reader friendly
+- Focus management
+
 ### Import/Export
 - Click Import to load .md files
 - Click Export to save your work
@@ -84,6 +107,7 @@ npm run build
 - Choose preview style
 - Toggle line numbers
 - Enable/Disable auto-save
+- Customize PWA behavior
 
 ## 📱 Responsive Design
 
@@ -111,6 +135,7 @@ This project is open source and available under the [MIT License](LICENSE).
 - Markdown parsing by [React Markdown](https://github.com/remarkjs/react-markdown)
 - Styling with [Tailwind CSS](https://tailwindcss.com)
 - Built with [Vite](https://vitejs.dev)
+- PWA support by [Vite PWA Plugin](https://vite-pwa-org.netlify.app/)
 
 ## 👨‍💻 Author
 
