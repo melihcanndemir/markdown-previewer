@@ -26,7 +26,6 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
       link.href = url;
       link.download = "document.md";
 
-      // Add to recent files list
       const recentFiles = JSON.parse(
         localStorage.getItem("recent-files") || "[]"
       );
@@ -68,7 +67,6 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
         }
 
         if (file.size > 10 * 1024 * 1024) {
-          // 10MB limit
           showNotification("File size exceeds 10MB limit");
           return;
         }
@@ -80,7 +78,6 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
             const content = e.target.result;
             setMarkdown(content);
 
-            // Add to recent files list
             const recentFiles = JSON.parse(
               localStorage.getItem("recent-files") || "[]"
             );
@@ -111,7 +108,6 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
         showNotification("Failed to import file");
       } finally {
         setIsProcessing(false);
-        // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -125,7 +121,6 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
     fileInputRef.current?.click();
   }, [isProcessing]);
 
-  // Handle drag and drop
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -158,6 +153,8 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
   return (
     <>
       <div
+        role="toolbar"
+        aria-label="Document actions"
         className="flex items-center gap-2"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -172,14 +169,19 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
               : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
           } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
           title={isProcessing ? "Processing..." : "Import markdown file"}
-          aria-label={
-            isProcessing ? "Processing import" : "Import markdown file"
-          }
+          aria-label={isProcessing ? "Processing import" : "Import markdown file"}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              triggerFileInput();
+            }
+          }}
         >
           <ArrowUpTrayIcon
             className={`w-4 h-4 sm:w-5 sm:h-5 ${
               isProcessing ? "animate-pulse" : ""
             }`}
+            aria-hidden="true"
           />
           <span className="hidden sm:inline text-sm sm:text-base">
             {isProcessing ? "Importing..." : "Import"}
@@ -197,11 +199,18 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
           } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
           title={isProcessing ? "Processing..." : "Export as markdown"}
           aria-label={isProcessing ? "Processing export" : "Export as markdown"}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleExport();
+            }
+          }}
         >
           <ArrowDownTrayIcon
             className={`w-4 h-4 sm:w-5 sm:h-5 ${
               isProcessing ? "animate-pulse" : ""
             }`}
+            aria-hidden="true"
           />
           <span className="hidden sm:inline text-sm sm:text-base">
             {isProcessing ? "Exporting..." : "Export"}
@@ -223,6 +232,7 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
       {notification && (
         <div
           role="alert"
+          aria-live="polite"
           className={`fixed bottom-4 right-4 flex items-center gap-2 p-3 rounded-lg z-50 shadow-lg backdrop-blur-sm transition-all duration-200 animate-in slide-in-from-right ${
             notification.type === "success"
               ? isDark
@@ -234,9 +244,9 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
           }`}
         >
           {notification.type === "success" ? (
-            <CheckCircleIcon className="w-5 h-5" />
+            <CheckCircleIcon className="w-5 h-5" aria-hidden="true" />
           ) : (
-            <XCircleIcon className="w-5 h-5" />
+            <XCircleIcon className="w-5 h-5" aria-hidden="true" />
           )}
           <p className="text-sm sm:text-base">{notification.message}</p>
         </div>

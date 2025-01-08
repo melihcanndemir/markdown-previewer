@@ -6,21 +6,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { FONT_SIZES } from "./constants";
 
-// -------------------- MARKDOWN TOOLBAR COMPONENT --------------------
+// Markdown Toolbar Component
 const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
-  // Consolidated Tailwind styles for buttons
   const buttonClass = `p-1.5 rounded-lg transition-colors duration-200 ${
     isDark
       ? "hover:bg-slate-700 active:bg-slate-600"
       : "hover:bg-slate-200 active:bg-slate-300"
   }`;
 
-  /**
-   * insertFormat function
-   * Formats text with prefix/suffix parameters.
-   * For "single-side" formats like Headings, suffix=""
-   * For "double-side" formats like Bold/Italic, suffix=prefix
-   */
   const insertFormat = useCallback(
     (prefix, suffix = prefix) => {
       const textarea = textareaRef.current;
@@ -34,12 +27,10 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
       const selection = text.substring(start, end);
       const after = text.substring(end);
 
-      // If selected text is already formatted => remove format
       const alreadyFormatted =
         selection.startsWith(prefix) && selection.endsWith(suffix);
 
       if (alreadyFormatted) {
-        // Remove formatting
         const unformattedSelection = selection.slice(
           prefix.length,
           selection.length - suffix.length
@@ -47,41 +38,30 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
         const newText = before + unformattedSelection + after;
 
         setMarkdown(newText);
-
-        // Adjust cursor position
         const newEndPos = start + unformattedSelection.length;
         textarea.setSelectionRange(start, newEndPos);
       } else {
-        // Add format => prefix + selection + suffix
-        // For heading-like formats that add at line start
-        // handle "new line" logic if needed
-
-        // Example check: if prefix ends with space and not at line start
         const lineStart = before.lastIndexOf("\n") + 1;
-        const isStartOfLine = lineStart === before.length; // or lineStart === 0
+        const isStartOfLine = lineStart === before.length;
 
         let finalPrefix = prefix;
         if (prefix.endsWith(" ") && !isStartOfLine && !before.endsWith("\n")) {
-          // Go to line start if needed
           finalPrefix = "\n" + prefix;
         }
 
         const newText = before + finalPrefix + selection + suffix + after;
         setMarkdown(newText);
 
-        // Set new position
         const newStartPos = start + finalPrefix.length;
         const newEndPos = end + finalPrefix.length;
         textarea.setSelectionRange(newStartPos, newEndPos);
       }
 
-      // Focus back to textarea
       setTimeout(() => textarea.focus(), 0);
     },
     [textareaRef, setMarkdown]
   );
 
-  // handleClick: simple wrapper that takes prefix and suffix parameters and calls insertFormat
   const handleClick = useCallback(
     (prefix, suffix = prefix) => {
       insertFormat(prefix, suffix);
@@ -89,121 +69,159 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
     [insertFormat]
   );
 
+  const handleKeyDown = useCallback((e, callback) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      callback();
+    }
+  }, []);
+
   return (
     <div
+      role="toolbar"
+      aria-label="Markdown formatting tools"
       className={`flex flex-wrap gap-1 mb-2 p-2 rounded-lg ${
         isDark ? "bg-slate-900/50" : "bg-slate-100"
       }`}
     >
-      {/* Heading 1: Tek taraf ekleme, bu yüzden suffix = "" */}
+      {/* Heading buttons */}
       <button
         className={buttonClass}
         onClick={() => handleClick("# ", "")}
+        aria-label="Add heading level 1"
         title="Heading 1"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("# ", ""))}
       >
         H1
       </button>
 
-      {/* Heading 2: Tek taraf ekleme */}
       <button
         className={buttonClass}
         onClick={() => handleClick("## ", "")}
+        aria-label="Add heading level 2"
         title="Heading 2"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("## ", ""))}
       >
         H2
       </button>
 
-      {/* Bold: İki taraf ekleme => prefix=** suffix=** */}
+      {/* Text formatting buttons */}
       <button
         className={buttonClass}
         onClick={() => handleClick("**")}
+        aria-label="Make text bold"
         title="Bold"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("**"))}
       >
         <strong>B</strong>
       </button>
 
-      {/* Italic: prefix = "*", suffix = "*" */}
       <button
         className={buttonClass}
-        onClick={() => handleClick("*", "*")}
+        onClick={() => handleClick("*")}
+        aria-label="Make text italic"
         title="Italic"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("*"))}
       >
         <em>I</em>
       </button>
 
-      {/* Strikethrough: prefix="~~", suffix="~~" */}
       <button
         className={buttonClass}
         onClick={() => handleClick("~~")}
+        aria-label="Strike through text"
         title="Strikethrough"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("~~"))}
       >
         <s>S</s>
       </button>
 
-      {/* Link: "[", "](url)" */}
+      {/* Link and image buttons */}
       <button
         className={buttonClass}
         onClick={() => handleClick("[", "](url)")}
+        aria-label="Insert link"
         title="Link"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("[", "](url)"))}
       >
         Link
       </button>
 
-      {/* Image: "![", "](url)" */}
       <button
         className={buttonClass}
         onClick={() => handleClick("![", "](url)")}
+        aria-label="Insert image"
         title="Image"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("![", "](url)"))}
       >
         Img
       </button>
 
-      {/* Inline code: prefix="`", suffix="`" */}
+      {/* Code formatting buttons */}
       <button
         className={buttonClass}
         onClick={() => handleClick("`")}
+        aria-label="Insert inline code"
         title="Inline Code"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("`"))}
       >
         Code
       </button>
 
-      {/* Code block: prefix="\n```\n", suffix="\n```" */}
       <button
         className={buttonClass}
         onClick={() => handleClick("\n```\n", "\n```")}
+        aria-label="Insert code block"
         title="Code Block"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("\n```\n", "\n```"))}
       >
         Block
       </button>
 
-      {/* Quote: Tek taraf ("> ") */}
+      {/* List and quote buttons */}
       <button
         className={buttonClass}
         onClick={() => handleClick("> ", "")}
+        aria-label="Insert quote"
         title="Quote"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("> ", ""))}
       >
         &gt;
       </button>
 
-      {/* List: Tek taraf ("- ") */}
       <button
         className={buttonClass}
         onClick={() => handleClick("- ", "")}
-        title="Bulleted List"
+        aria-label="Insert bullet list"
+        title="Bullet List"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("- ", ""))}
       >
         •
       </button>
 
-      {/* Numbered list: Tek taraf ("1. ") */}
       <button
         className={buttonClass}
         onClick={() => handleClick("1. ", "")}
+        aria-label="Insert numbered list"
         title="Numbered List"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick("1. ", ""))}
       >
         1.
       </button>
 
-      {/* Table: Insert a chunk of text once */}
+      {/* Table button */}
       <button
         className={buttonClass}
         onClick={() =>
@@ -212,7 +230,13 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
             ""
           )
         }
+        aria-label="Insert table"
         title="Insert Table"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, () => handleClick(
+          "| Header 1 | Header 2 |\n|------------|------------|\n| Content 1 | Content 2 |",
+          ""
+        ))}
       >
         Table
       </button>
@@ -226,7 +250,7 @@ MarkdownToolbar.propTypes = {
   setMarkdown: PropTypes.func.isRequired,
 };
 
-// -------------------- EDITOR COMPONENT --------------------
+// Editor Component
 function MarkdownEditor({
   markdown,
   setMarkdown,
@@ -238,9 +262,6 @@ function MarkdownEditor({
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
 
-  /**
-   * Synchronize textarea scroll with line numbers
-   */
   const handleScroll = useCallback(() => {
     const textarea = textareaRef.current;
     const lineNumbers = lineNumbersRef.current;
@@ -258,10 +279,8 @@ function MarkdownEditor({
     textarea.addEventListener("input", handleScroll);
     window.addEventListener("resize", handleScroll);
 
-    // Initial sync
     handleScroll();
 
-    // Cleanup
     return () => {
       textarea.removeEventListener("scroll", handleScroll);
       textarea.removeEventListener("input", handleScroll);
@@ -269,7 +288,6 @@ function MarkdownEditor({
     };
   }, [handleScroll]);
 
-  // Tailwind scrollbar classes
   const scrollbarClasses = isDark
     ? "scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 hover:scrollbar-thumb-slate-500"
     : "scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400";
@@ -281,9 +299,10 @@ function MarkdownEditor({
         ${isDark ? "bg-slate-800" : "bg-white border border-slate-200"}
         p-4 shadow-xl flex flex-col
       `}
-      style={{ position: "relative" }}
+      role="region"
+      aria-label="Markdown editor"
     >
-      {/* Header: Title + Expand Button */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2
           className={`text-xl font-semibold ${
@@ -300,12 +319,20 @@ function MarkdownEditor({
               ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
               : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
           }`}
-          title={isFullScreen ? "Collapse editor" : "Expand editor"}
+          aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          title={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onFullScreenToggle();
+            }
+          }}
         >
           {isFullScreen ? (
-            <ArrowsPointingInIcon className="w-5 h-5" />
+            <ArrowsPointingInIcon className="w-5 h-5" aria-hidden="true" />
           ) : (
-            <ArrowsPointingOutIcon className="w-5 h-5" />
+            <ArrowsPointingOutIcon className="w-5 h-5" aria-hidden="true" />
           )}
         </button>
       </div>
@@ -319,7 +346,7 @@ function MarkdownEditor({
         />
       )}
 
-      {/* Editor Area: Line numbers (optional) + textarea */}
+      {/* Editor Area */}
       <div className="flex-grow relative">
         {settings.showLineNumbers && (
           <div
@@ -335,8 +362,9 @@ function MarkdownEditor({
               fontSize: FONT_SIZES[settings.fontSize],
               lineHeight: "1.5rem",
               padding: "0.75rem 0",
-              overflow: "auto", // line numbers should also have scrollbar
+              overflow: "auto",
             }}
+            aria-hidden="true"
           >
             {markdown.split("\n").map((_, idx) => (
               <div
@@ -363,15 +391,16 @@ function MarkdownEditor({
           style={{
             fontSize: FONT_SIZES[settings.fontSize],
             lineHeight: "1.5rem",
-            // Left padding 4em if line numbers enabled
             padding: settings.showLineNumbers
               ? "0.75rem 0.75rem 0.75rem 4em"
               : "0.75rem",
-            // Simple auto height: line count * 24px + extra
             height: `${Math.max(markdown.split("\n").length * 24 + 48, 200)}px`,
           }}
           spellCheck="false"
           placeholder="Write your markdown here..."
+          aria-label="Markdown editor textarea"
+          role="textbox"
+          aria-multiline="true"
         />
       </div>
     </div>

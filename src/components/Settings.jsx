@@ -22,7 +22,6 @@ function Settings({
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // Calculate available space in different directions
     const spaceAbove = buttonRect.top;
     const spaceBelow = viewportHeight - buttonRect.bottom;
     const spaceLeft = buttonRect.left;
@@ -30,7 +29,6 @@ function Settings({
 
     let top, left, transformOrigin;
 
-    // Determine vertical position
     if (spaceBelow >= menuRect.height || spaceBelow >= spaceAbove) {
       top = buttonRect.bottom + 8;
       transformOrigin = "top";
@@ -39,9 +37,7 @@ function Settings({
       transformOrigin = "bottom";
     }
 
-    // Determine horizontal position
     if (isMobile) {
-      // Center the menu on mobile
       left = Math.max(
         16,
         Math.min(
@@ -55,14 +51,12 @@ function Settings({
       left = buttonRect.left;
     }
 
-    // Adjust for screen edges
     top = Math.max(16, Math.min(viewportHeight - menuRect.height - 16, top));
     left = Math.max(16, Math.min(viewportWidth - menuRect.width - 16, left));
 
     setMenuPosition({ top, left, transformOrigin });
   }, [isMobile]);
 
-  // Handle click outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (settingsRef.current && !settingsRef.current.contains(event.target)) {
@@ -81,17 +75,14 @@ function Settings({
     };
   }, [isOpen]);
 
-  // Handle menu positioning
   useEffect(() => {
     if (isOpen) {
       calculateMenuPosition();
-      // Recalculate position after a short delay to account for animations
       const timer = setTimeout(calculateMenuPosition, 100);
       return () => clearTimeout(timer);
     }
   }, [isOpen, calculateMenuPosition, orientation]);
 
-  // Handle window resize
   useEffect(() => {
     if (isOpen) {
       window.addEventListener("resize", calculateMenuPosition);
@@ -103,7 +94,13 @@ function Settings({
     setIsOpen((prev) => !prev);
   }, []);
 
-  // Custom styles for the settings panel
+  const handleKeyDown = useCallback((e, callback) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      callback();
+    }
+  }, []);
+
   const menuStyles = {
     position: "fixed",
     top: `${menuPosition.top}px`,
@@ -125,25 +122,31 @@ function Settings({
             ? "bg-slate-700 hover:bg-slate-600 active:bg-slate-500"
             : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
         } ${isOpen ? "ring-2 ring-purple-500" : ""}`}
-        title="Settings"
         aria-label="Open settings menu"
         aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-controls="settings-menu"
+        tabIndex={0}
+        onKeyDown={(e) => handleKeyDown(e, toggleSettings)}
       >
-        <Cog6ToothIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <Cog6ToothIcon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
       </button>
 
       {isOpen && (
         <>
-          {/* Backdrop overlay on mobile */}
           {isMobile && (
             <div
               className="fixed inset-0 bg-black/20 backdrop-blur-sm"
               onClick={() => setIsOpen(false)}
+              aria-hidden="true"
             />
           )}
 
           <div
             ref={settingsRef}
+            id="settings-menu"
+            role="dialog"
+            aria-label="Settings menu"
             style={menuStyles}
             className={`rounded-lg shadow-xl overflow-y-auto overscroll-contain ${
               isDark ? "bg-slate-800" : "bg-white border border-slate-200"
@@ -151,10 +154,14 @@ function Settings({
           >
             {/* Font Size Setting */}
             <div className="mb-4">
-              <label className="block mb-2 text-sm font-medium">
+              <label
+                htmlFor="font-size"
+                className="block mb-2 text-sm font-medium"
+              >
                 Font Size
               </label>
               <select
+                id="font-size"
                 value={settings.fontSize}
                 onChange={(e) =>
                   onSettingsChange({ ...settings, fontSize: e.target.value })
@@ -164,6 +171,7 @@ function Settings({
                     ? "bg-slate-700 border-slate-600 text-white"
                     : "bg-slate-50 border-slate-200"
                 }`}
+                aria-label="Select font size"
               >
                 <option value="small">Small</option>
                 <option value="medium">Medium</option>
@@ -173,10 +181,14 @@ function Settings({
 
             {/* Preview Style Setting */}
             <div className="mb-4">
-              <label className="block mb-2 text-sm font-medium">
+              <label
+                htmlFor="preview-style"
+                className="block mb-2 text-sm font-medium"
+              >
                 Preview Style
               </label>
               <select
+                id="preview-style"
                 value={settings.previewStyle}
                 onChange={(e) =>
                   onSettingsChange({
@@ -189,6 +201,7 @@ function Settings({
                     ? "bg-slate-700 border-slate-600 text-white"
                     : "bg-slate-50 border-slate-200"
                 }`}
+                aria-label="Select preview style"
               >
                 <option value="default">Default</option>
                 <option value="github">GitHub</option>
@@ -197,7 +210,11 @@ function Settings({
             </div>
 
             {/* Toggle Settings */}
-            <div className="space-y-3">
+            <div
+              className="space-y-3"
+              role="group"
+              aria-label="Toggle settings"
+            >
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -213,6 +230,7 @@ function Settings({
                       ? "bg-slate-700 border-slate-600"
                       : "bg-slate-50 border-slate-200"
                   }`}
+                  aria-label="Show line numbers"
                 />
                 <span className="text-sm font-medium">Show Line Numbers</span>
               </label>
@@ -232,6 +250,7 @@ function Settings({
                       ? "bg-slate-700 border-slate-600"
                       : "bg-slate-50 border-slate-200"
                   }`}
+                  aria-label="Enable auto save"
                 />
                 <span className="text-sm font-medium">Auto Save</span>
               </label>
@@ -251,13 +270,16 @@ function Settings({
                       ? "bg-slate-700 border-slate-600"
                       : "bg-slate-50 border-slate-200"
                   }`}
+                  aria-label="Enable sync scrolling"
                 />
                 <span className="text-sm font-medium">Sync Scrolling</span>
               </label>
             </div>
 
             <div className="flex items-center justify-between gap-4 py-2">
-              <span className="text-sm">Toolbar</span>
+              <span className="text-sm" id="toolbar-label">
+                Toolbar
+              </span>
               <button
                 onClick={() =>
                   onSettingsChange({
@@ -265,7 +287,21 @@ function Settings({
                     showToolbar: !settings.showToolbar,
                   })
                 }
-                className={`...`}
+                className={`px-3 py-1 rounded-lg transition-colors ${
+                  isDark
+                    ? "bg-slate-700 hover:bg-slate-600"
+                    : "bg-slate-200 hover:bg-slate-300"
+                }`}
+                aria-labelledby="toolbar-label"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  handleKeyDown(e, () =>
+                    onSettingsChange({
+                      ...settings,
+                      showToolbar: !settings.showToolbar,
+                    })
+                  )
+                }
               >
                 {settings.showToolbar ? "Hide" : "Show"}
               </button>

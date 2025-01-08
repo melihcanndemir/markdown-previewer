@@ -20,6 +20,13 @@ function MarkdownPreview({
   isFullScreen,
   onFullScreenToggle,
 }) {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onFullScreenToggle();
+    }
+  };
+
   return (
     <div
       className={`
@@ -27,6 +34,8 @@ function MarkdownPreview({
         ${isDark ? "bg-slate-800" : "bg-white border border-slate-200"}
         p-4 shadow-xl flex flex-col
       `}
+      role="region"
+      aria-label="Markdown preview"
     >
       <div className="flex justify-between items-center mb-2">
         <h2
@@ -46,11 +55,14 @@ function MarkdownPreview({
               : "bg-slate-200 hover:bg-slate-300 active:bg-slate-400"
           }`}
           title={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
         >
           {isFullScreen ? (
-            <ArrowsPointingInIcon className="w-5 h-5" />
+            <ArrowsPointingInIcon className="w-5 h-5" aria-hidden="true" />
           ) : (
-            <ArrowsPointingOutIcon className="w-5 h-5" />
+            <ArrowsPointingOutIcon className="w-5 h-5" aria-hidden="true" />
           )}
         </button>
       </div>
@@ -93,62 +105,109 @@ function MarkdownPreview({
         style={{
           fontSize: FONT_SIZES[settings.fontSize],
         }}
+        role="article"
       >
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
             // Başlıklar için özel bileşen
-            h1: ({ ...props }) => <h1 className="mt-3 mb-2" {...props} />,
-            h2: ({ ...props }) => <h2 className="mt-2 mb-1" {...props} />,
-            h3: ({ ...props }) => <h3 className="mt-2 mb-1" {...props} />,
+            h1: ({ ...props }) => (
+              <h1 className="mt-3 mb-2" {...props} tabIndex={0} />
+            ),
+            h2: ({ ...props }) => (
+              <h2 className="mt-2 mb-1" {...props} tabIndex={0} />
+            ),
+            h3: ({ ...props }) => (
+              <h3 className="mt-2 mb-1" {...props} tabIndex={0} />
+            ),
             // Paragraflar için özel bileşen
-            p: ({ children, parent, ...props }) => {
-              // Eğer içerisinde img varsa
-              const hasImage = parent?.children?.some(
-                (child) => child.type === "image"
-              );
-              return (
-                <p
-                  className={`my-1 ${
-                    hasImage ? "inline-flex gap-2 flex-wrap" : ""
-                  }`}
-                  {...props}
-                >
-                  {children}
-                </p>
-              );
-            },
+            p: ({ children, ...props }) => (
+              <p className="my-1" {...props} tabIndex={0}>
+                {children}
+              </p>
+            ),
             // Listeler için özel bileşen
-            ul: ({ ...props }) => <ul className="my-1" {...props} />,
-            ol: ({ ...props }) => <ol className="my-1" {...props} />,
+            ul: ({ ...props }) => (
+              <ul className="my-1" role="list" {...props} />
+            ),
+            ol: ({ ...props }) => (
+              <ol className="my-1" role="list" {...props} />
+            ),
             // Liste öğeleri için özel bileşen
-            li: ({ ...props }) => <li className="my-0" {...props} />,
+            li: ({ ...props }) => (
+              <li className="my-0" role="listitem" {...props} tabIndex={0} />
+            ),
             // Kod blokları için özel bileşen
-            code({ node, inline, className, children, ...props }) {
+            code({ inline, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
+              const language = match ? match[1] : "";
+
               return !inline && match ? (
                 <SyntaxHighlighter
                   {...props}
                   style={isDark ? oneDark : oneLight}
-                  language={match[1]}
+                  language={language}
                   PreTag="div"
+                  role="code"
+                  tabIndex={0}
+                  aria-label={`Code block in ${language}`}
                 >
                   {String(children).replace(/\n$/, "")}
                 </SyntaxHighlighter>
               ) : (
-                <code {...props} className={className}>
+                <code {...props} className={className} role="code" tabIndex={0}>
                   {children}
                 </code>
               );
             },
             // Alıntılar için özel bileşen
             blockquote: ({ ...props }) => (
-              <blockquote className="my-2" {...props} />
+              <blockquote
+                className="my-2"
+                {...props}
+                role="blockquote"
+                tabIndex={0}
+              />
             ),
             // Tablolar için özel bileşen
-            table: ({ ...props }) => <table className="my-2" {...props} />,
+            table: ({ ...props }) => (
+              <table className="my-2" {...props} role="table" tabIndex={0} />
+            ),
+            thead: (props) => <thead {...props} role="rowgroup" />,
+            tbody: (props) => <tbody {...props} role="rowgroup" />,
+            tr: (props) => <tr {...props} role="row" />,
+            th: (props) => (
+              <th {...props} role="columnheader" scope="col" tabIndex={0} />
+            ),
+            td: (props) => <td {...props} role="cell" tabIndex={0} />,
             // Yatay çizgi için özel bileşen
-            hr: ({ ...props }) => <hr className="my-2" {...props} />,
+            hr: ({ ...props }) => (
+              <hr
+                className="my-2"
+                {...props}
+                role="separator"
+                aria-orientation="horizontal"
+              />
+            ),
+            // Bağlantılar için özel bileşen
+            a: ({ ...props }) => (
+              <a
+                {...props}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              />
+            ),
+            // Görseller için özel bileşen
+            img: ({ alt, ...props }) => (
+              <img
+                {...props}
+                alt={alt || ""}
+                role="img"
+                tabIndex={0}
+                className="rounded-lg shadow-md"
+              />
+            ),
           }}
           rehypePlugins={[rehypeRaw]}
         >
