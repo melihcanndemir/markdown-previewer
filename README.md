@@ -3,6 +3,7 @@
 ![Netlify Status](https://api.netlify.com/api/v1/badges/a11e7b0f-8713-4ebe-af30-c0fd819359f0/deploy-status)
 [![PWA Ready](https://img.shields.io/badge/PWA-ready-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 [![Accessibility Score](https://img.shields.io/badge/Accessibility-100%25-success.svg)](https://www.w3.org/WAI/standards-guidelines/aria/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > A sleek and modern markdown editor and previewer built with React + Vite ⚡
 
