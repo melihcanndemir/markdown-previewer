@@ -1,13 +1,28 @@
-import { useRef, useEffect, useCallback } from "react";
-import PropTypes from "prop-types";
+import React, { useRef, useEffect, useCallback } from "react";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
-import { FONT_SIZES } from "./constants";
+import { EditorSettings, FONT_SIZES } from "../types"; // Corrected path
+
+// Type definitions for component props
+interface MarkdownToolbarProps {
+  isDark: boolean;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  onChange: (value: string) => void;
+}
+
+interface MarkdownEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  isDark: boolean;
+  settings: EditorSettings;
+  isFullScreen: boolean;
+  onFullScreenToggle: () => void;
+}
 
 // Markdown Toolbar Component
-const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
+const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ isDark, textareaRef, onChange }) => {
   const buttonClass = `p-1.5 rounded-lg transition-colors duration-200 ${
     isDark
       ? "hover:bg-slate-700 active:bg-slate-600"
@@ -15,7 +30,7 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
   }`;
 
   const insertFormat = useCallback(
-    (prefix, suffix = prefix) => {
+    (prefix: string, suffix: string = prefix) => {
       const textarea = textareaRef.current;
       if (!textarea) return;
 
@@ -37,7 +52,7 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
         );
         const newText = before + unformattedSelection + after;
 
-        setMarkdown(newText);
+        onChange(newText);
         const newEndPos = start + unformattedSelection.length;
         textarea.setSelectionRange(start, newEndPos);
       } else {
@@ -50,7 +65,7 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
         }
 
         const newText = before + finalPrefix + selection + suffix + after;
-        setMarkdown(newText);
+        onChange(newText);
 
         const newStartPos = start + finalPrefix.length;
         const newEndPos = end + finalPrefix.length;
@@ -59,17 +74,17 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
 
       setTimeout(() => textarea.focus(), 0);
     },
-    [textareaRef, setMarkdown]
+    [textareaRef, onChange]
   );
 
   const handleClick = useCallback(
-    (prefix, suffix = prefix) => {
+    (prefix: string, suffix: string = prefix) => {
       insertFormat(prefix, suffix);
     },
     [insertFormat]
   );
 
-  const handleKeyDown = useCallback((e, callback) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>, callback: () => void) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       callback();
@@ -244,23 +259,17 @@ const MarkdownToolbar = ({ isDark, textareaRef, setMarkdown }) => {
   );
 };
 
-MarkdownToolbar.propTypes = {
-  isDark: PropTypes.bool.isRequired,
-  textareaRef: PropTypes.object.isRequired,
-  setMarkdown: PropTypes.func.isRequired,
-};
-
 // Editor Component
-function MarkdownEditor({
-  markdown,
-  setMarkdown,
+const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
+  value,
+  onChange,
   isDark,
   settings,
   isFullScreen,
   onFullScreenToggle,
-}) {
-  const textareaRef = useRef(null);
-  const lineNumbersRef = useRef(null);
+}) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = useCallback(() => {
     const textarea = textareaRef.current;
@@ -291,6 +300,16 @@ function MarkdownEditor({
   const scrollbarClasses = isDark
     ? "scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 hover:scrollbar-thumb-slate-500"
     : "scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400";
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = settings.editorHeight === "auto" ? "auto" : `${settings.editorHeight}px`;
+      if (settings.editorHeight === "auto") {
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }
+    }
+  }, [value, settings.editorHeight]);
 
   return (
     <div
@@ -342,7 +361,7 @@ function MarkdownEditor({
         <MarkdownToolbar
           isDark={isDark}
           textareaRef={textareaRef}
-          setMarkdown={setMarkdown}
+          onChange={onChange}
         />
       )}
 
@@ -357,22 +376,23 @@ function MarkdownEditor({
                 : "bg-slate-100 text-slate-400"
             }`}
             style={{
-              width: "3.5em",
+              width: "3em",
               borderRight: `1px solid ${isDark ? "#475569" : "#e2e8f0"}`,
               fontSize: FONT_SIZES[settings.fontSize],
-              lineHeight: "1.5rem",
-              padding: "0.75rem 0",
+              lineHeight: "2.2rem",
+              padding: "0.5rem 0",
               overflow: "auto",
             }}
             aria-hidden="true"
           >
-            {markdown.split("\n").map((_, idx) => (
+            {value.split("\n").map((_, idx: number) => (
               <div
                 key={idx}
                 style={{
-                  paddingRight: "0.75rem",
-                  textAlign: "right",
-                  height: "1.5rem",
+                  paddingRight: "0.2rem",
+                  paddingLeft: "0.2rem",
+                  textAlign: "center",
+                  height: "2.2rem",
                 }}
               >
                 {idx + 1}
@@ -383,18 +403,18 @@ function MarkdownEditor({
 
         <textarea
           ref={textareaRef}
-          value={markdown}
-          onChange={(e) => setMarkdown(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           className={`w-full min-h-full outline-none rounded-lg font-mono resize-none ${
             isDark ? "bg-slate-900 text-gray-100" : "bg-slate-50 text-slate-900"
           } focus:ring-2 focus:ring-purple-500 ${scrollbarClasses}`}
           style={{
             fontSize: FONT_SIZES[settings.fontSize],
-            lineHeight: "1.5rem",
+            lineHeight: "2.2rem",
             padding: settings.showLineNumbers
-              ? "0.75rem 0.75rem 0.75rem 4em"
-              : "0.75rem",
-            height: `${Math.max(markdown.split("\n").length * 24 + 48, 200)}px`,
+              ? "0.5rem 0.5rem 0.5rem 3.2em"
+              : "0.5rem",
+            height: `${Math.max(value.split("\n").length * 35.2 + 32, 200)}px`,
           }}
           spellCheck="false"
           placeholder="Write your markdown here..."
@@ -406,19 +426,5 @@ function MarkdownEditor({
     </div>
   );
 }
-
-MarkdownEditor.propTypes = {
-  markdown: PropTypes.string.isRequired,
-  setMarkdown: PropTypes.func.isRequired,
-  isDark: PropTypes.bool.isRequired,
-  settings: PropTypes.shape({
-    fontSize: PropTypes.string.isRequired,
-    showLineNumbers: PropTypes.bool.isRequired,
-    showToolbar: PropTypes.bool.isRequired,
-    editorHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  }).isRequired,
-  isFullScreen: PropTypes.bool.isRequired,
-  onFullScreenToggle: PropTypes.func.isRequired,
-};
 
 export default MarkdownEditor;

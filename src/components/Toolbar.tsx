@@ -1,5 +1,4 @@
-import { useState, useRef, useCallback } from "react";
-import PropTypes from "prop-types";
+import React, { useState, useRef, useCallback } from "react";
 import {
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
@@ -7,12 +6,24 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-function Toolbar({ markdown, setMarkdown, isDark }) {
-  const [notification, setNotification] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const fileInputRef = useRef(null);
+// Type definitions
+interface NotificationState {
+  message: string;
+  type: "success" | "error";
+}
 
-  const showNotification = useCallback((message, type = "error") => {
+interface ToolbarProps {
+  markdown: string;
+  setMarkdown: (markdown: string) => void;
+  isDark: boolean;
+}
+
+const Toolbar: React.FC<ToolbarProps> = ({ markdown, setMarkdown, isDark }) => {
+  const [notification, setNotification] = useState<NotificationState | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showNotification = useCallback((message: string, type: "success" | "error" = "error") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   }, []);
@@ -54,7 +65,7 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
   }, [markdown, showNotification]);
 
   const handleImport = useCallback(
-    async (event) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -73,9 +84,13 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
 
         const reader = new FileReader();
 
-        reader.onload = async (e) => {
+        reader.onload = async (e: ProgressEvent<FileReader>) => {
           try {
-            const content = e.target.result;
+            const content = e.target?.result as string;
+            if (content === null) {
+              showNotification("Failed to read file content.");
+              return;
+            }
             setMarkdown(content);
 
             const recentFiles = JSON.parse(
@@ -121,13 +136,13 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
     fileInputRef.current?.click();
   }, [isProcessing]);
 
-  const handleDragOver = useCallback((e) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
   const handleDrop = useCallback(
-    (e) => {
+    (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -137,11 +152,11 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
       );
 
       if (mdFile) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(mdFile);
         if (fileInputRef.current) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(mdFile);
           fileInputRef.current.files = dataTransfer.files;
-          handleImport({ target: fileInputRef.current });
+          handleImport({ target: fileInputRef.current } as React.ChangeEvent<HTMLInputElement>);
         }
       } else {
         showNotification("Please drop a markdown (.md) file");
@@ -254,11 +269,5 @@ function Toolbar({ markdown, setMarkdown, isDark }) {
     </>
   );
 }
-
-Toolbar.propTypes = {
-  markdown: PropTypes.string.isRequired,
-  setMarkdown: PropTypes.func.isRequired,
-  isDark: PropTypes.bool.isRequired,
-};
 
 export default Toolbar;

@@ -1,8 +1,5 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
 .logo {
@@ -39,4 +36,210 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Base Scrollbar Reset */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.dark * {
+  scrollbar-color: #334155 #0f172a !important;
+}
+
+/* Webkit Scrollbar - Light Theme */
+*::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 100vh !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #94a3b8 !important;
+  border: 3px solid #f1f5f9 !important;
+  border-radius: 100vh !important;
+  background-clip: padding-box !important;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #64748b !important;
+}
+
+/* Webkit Scrollbar - Dark Theme */
+.dark *::-webkit-scrollbar-track {
+  background: #0f172a !important;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+  border: 3px solid #0f172a !important;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+/* Hide Scrollbar Utility */
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Editor ve Preview için özel scrollbar stilleri */
+.prose ::-webkit-scrollbar,
+[class*="language-"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.prose ::-webkit-scrollbar-track,
+[class*="language-"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.prose ::-webkit-scrollbar-thumb,
+[class*="language-"] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 100vh;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.prose ::-webkit-scrollbar-thumb:hover,
+[class*="language-"] ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode için */
+.dark .prose ::-webkit-scrollbar-thumb,
+.dark [class*="language-"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .prose ::-webkit-scrollbar-thumb:hover,
+.dark [class*="language-"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Firefox için özel scrollbar */
+.prose,
+[class*="language-"] {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .prose,
+.dark [class*="language-"] {
+  scrollbar-color: #475569 transparent;
+}
+
+/* Chrome ve Safari için scrollbar stilleri */
+textarea::-webkit-scrollbar,
+pre::-webkit-scrollbar,
+code::-webkit-scrollbar,
+.prose::-webkit-scrollbar,
+[class*="language-"]::-webkit-scrollbar,
+div[class*="overflow-auto"]::-webkit-scrollbar,
+div[class*="overflow-y-auto"]::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+textarea::-webkit-scrollbar-track,
+pre::-webkit-scrollbar-track,
+code::-webkit-scrollbar-track,
+.prose::-webkit-scrollbar-track,
+[class*="language-"]::-webkit-scrollbar-track,
+div[class*="overflow-auto"]::-webkit-scrollbar-track,
+div[class*="overflow-y-auto"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb,
+pre::-webkit-scrollbar-thumb,
+code::-webkit-scrollbar-thumb,
+.prose::-webkit-scrollbar-thumb,
+[class*="language-"]::-webkit-scrollbar-thumb,
+div[class*="overflow-auto"]::-webkit-scrollbar-thumb,
+div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 100vh;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+textarea::-webkit-scrollbar-thumb:hover,
+pre::-webkit-scrollbar-thumb:hover,
+code::-webkit-scrollbar-thumb:hover,
+.prose::-webkit-scrollbar-thumb:hover,
+[class*="language-"]::-webkit-scrollbar-thumb:hover,
+div[class*="overflow-auto"]::-webkit-scrollbar-thumb:hover,
+div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Dark mode için scrollbar */
+.dark textarea::-webkit-scrollbar-track,
+.dark pre::-webkit-scrollbar-track,
+.dark code::-webkit-scrollbar-track,
+.dark .prose::-webkit-scrollbar-track,
+.dark [class*="language-"]::-webkit-scrollbar-track,
+.dark div[class*="overflow-auto"]::-webkit-scrollbar-track,
+.dark div[class*="overflow-y-auto"]::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark textarea::-webkit-scrollbar-thumb,
+.dark pre::-webkit-scrollbar-thumb,
+.dark code::-webkit-scrollbar-thumb,
+.dark .prose::-webkit-scrollbar-thumb,
+.dark [class*="language-"]::-webkit-scrollbar-thumb,
+.dark div[class*="overflow-auto"]::-webkit-scrollbar-thumb,
+.dark div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border: 2px solid #1e293b;
+  background-clip: padding-box;
+}
+
+.dark textarea::-webkit-scrollbar-thumb:hover,
+.dark pre::-webkit-scrollbar-thumb:hover,
+.dark code::-webkit-scrollbar-thumb:hover,
+.dark .prose::-webkit-scrollbar-thumb:hover,
+.dark [class*="language-"]::-webkit-scrollbar-thumb:hover,
+.dark div[class*="overflow-auto"]::-webkit-scrollbar-thumb:hover,
+.dark div[class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+  border: 2px solid #1e293b;
+  background-clip: padding-box;
+}
+
+/* Firefox için scrollbar */
+textarea,
+pre,
+code,
+.prose,
+[class*="language-"],
+div[class*="overflow-auto"],
+div[class*="overflow-y-auto"] {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark textarea,
+.dark pre,
+.dark code,
+.dark .prose,
+.dark [class*="language-"],
+.dark div[class*="overflow-auto"],
+.dark div[class*="overflow-y-auto"] {
+  scrollbar-color: #334155 #1e293b;
 }
