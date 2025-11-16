@@ -36,6 +36,7 @@
 - 🔌 Offline functionality
 - 📲 Install on any device
 - 🎨 Adaptive interface
+- 🤖 **NEW!** Gemini AI Assistant for writing assistance
 
 ## 🚀 Live Demo
 
@@ -47,12 +48,14 @@ Try it out: [WebMarkdown](https://webmarkdown.netlify.app/)
 - **Build Tool:** Vite 6.0
 - **Styling:** Tailwind CSS 3.4
 - **PWA:** Vite PWA Plugin
+- **AI:** Google Gemini API
 - **Key Dependencies:**
   - 🎨 @heroicons/react
   - 📝 react-markdown
   - ✨ remark-gfm
   - 🎯 PropTypes
   - 📱 vite-plugin-pwa
+  - 🤖 @google/generative-ai
 
 ## 💻 Local Development
 
@@ -75,6 +78,34 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## 🤖 Gemini AI Setup (Optional)
+
+To enable the AI Assistant feature:
+
+1. Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+2. Create a `.env` file in the root directory:
+```bash
+cp .env.example .env
+```
+
+3. Add your API key to the `.env` file:
+```env
+VITE_GEMINI_API_KEY=your_actual_api_key_here
+```
+
+4. Restart the development server
+
+### AI Assistant Features:
+- **Improve Writing:** Enhance clarity and professionalism
+- **Fix Grammar:** Correct spelling and punctuation
+- **Summarize:** Create concise summaries
+- **Expand:** Add more details and explanations
+- **Translate:** Turkish ↔ English translation
+- **Custom Prompts:** Use your own AI instructions
+
+**Note:** The AI Assistant button will appear in the toolbar once the API key is configured.
 
 ## 🎯 Usage
 

@@ -12,9 +12,12 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^6.3.1",
     "@mui/material": "^6.3.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
