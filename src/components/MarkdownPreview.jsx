@@ -68,6 +68,7 @@ function MarkdownPreview({
       </div>
 
       <div
+        data-preview-content
         className={`
           prose
           max-w-none

@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import MarkdownEditor from "./components/MarkdownEditor";
 import MarkdownPreview from "./components/MarkdownPreview";
 import Toolbar from "./components/Toolbar";
 import Settings from "./components/Settings";
+import GeminiAssistant from "./components/GeminiAssistant";
+import KeyboardShortcutsPanel from "./components/KeyboardShortcutsPanel";
 import {
   SunIcon,
   MoonIcon,
@@ -57,6 +59,14 @@ function App() {
         };
   });
 
+  // AI Assistant state
+  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const editorRef = useRef(null);
+
+  // Keyboard Shortcuts Panel state
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
   // Responsive Layout Management
   const handleResize = useCallback(() => {
     setIsMobile(window.innerWidth < 768);
@@ -104,6 +114,16 @@ function App() {
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
+      // Check for "?" key (Shift + /)
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Don't trigger if user is typing in input/textarea
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          setIsShortcutsOpen(true);
+        }
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key.toLowerCase()) {
           case "s":
@@ -137,6 +157,52 @@ function App() {
       console.error("Fullscreen mode failed:", error);
     }
   }, []);
+
+  // AI Assistant handlers
+  const handleOpenAI = useCallback(() => {
+    // Get selected text from textarea
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = markdown.substring(start, end);
+      setSelectedText(selected);
+    }
+    setIsAIOpen(true);
+  }, [markdown]);
+
+  const handleInsertAIText = useCallback((text, replace = false) => {
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      let newText;
+      let newCursorPos;
+
+      if (replace && start !== end) {
+        // Replace selected text
+        newText = markdown.substring(0, start) + text + markdown.substring(end);
+        newCursorPos = start + text.length;
+      } else {
+        // Insert below selected text or at cursor
+        newText = markdown.substring(0, end) + '\n\n' + text + markdown.substring(end);
+        newCursorPos = end + text.length + 2;
+      }
+
+      setMarkdown(newText);
+
+      // Set cursor position after state update
+      setTimeout(() => {
+        const updatedTextarea = document.querySelector('textarea');
+        if (updatedTextarea) {
+          updatedTextarea.focus();
+          updatedTextarea.setSelectionRange(newCursorPos, newCursorPos);
+          updatedTextarea.scrollTop = updatedTextarea.scrollHeight; // Scroll to bottom
+        }
+      }, 0);
+    }
+  }, [markdown]);
 
   // F11 key listener
   useEffect(() => {
@@ -240,6 +306,8 @@ function App() {
                   setMarkdown={setMarkdown}
                   isDark={isDark}
                   isMobile={isMobile}
+                  onOpenAI={handleOpenAI}
+                  settings={settings}
                 />
                 <div className="hidden sm:block h-6 w-px bg-slate-600/50" />
                 <Settings
@@ -337,6 +405,8 @@ function App() {
                   isMobile={isMobile}
                   isFullScreen={isEditorExpanded}
                   onFullScreenToggle={toggleFullScreen}
+                  onOpenAI={handleOpenAI}
+                  settings={settings}
                 />
               </div>
 
@@ -464,6 +534,22 @@ function App() {
         </div>
       </main>
 
+      {/* Gemini AI Assistant Modal */}
+      <GeminiAssistant
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+        selectedText={selectedText}
+        onInsertText={handleInsertAIText}
+        darkMode={isDark}
+      />
+
+      {/* Keyboard Shortcuts Panel */}
+      <KeyboardShortcutsPanel
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+        isDark={isDark}
+      />
+
       {/* Footer */}
       <footer
         className={`mt-auto py-4 sm:py-6 ${
@@ -506,7 +592,28 @@ function App() {
               </a>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <button
+                onClick={() => setIsShortcutsOpen(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 ${
+                  isDark
+                    ? "bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 border border-purple-700/50"
+                    : "bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-300"
+                }`}
+                title="View keyboard shortcuts (Press ?)"
+                aria-label="View keyboard shortcuts"
+              >
+                <span className="text-lg">⌨️</span>
+                <span className="font-medium text-sm sm:text-base">
+                  Keyboard Shortcuts
+                </span>
+                <kbd className={`hidden sm:inline px-1.5 py-0.5 text-xs rounded ${
+                  isDark ? "bg-purple-900 text-purple-300" : "bg-purple-200 text-purple-800"
+                }`}>
+                  ?
+                </kbd>
+              </button>
+
               <a
                 href="https://github.com/melihcanndemir/markdown-previewer"
                 target="_blank"
