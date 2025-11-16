@@ -6,6 +6,7 @@ import {
   DocumentTextIcon,
   DocumentIcon,
   CodeBracketIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -298,12 +299,35 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
       </button>
 
       {isOpen && (
-        <div
-          className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg z-50 ${
-            isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
-          }`}
-        >
-          <div className="py-2">
+        <>
+          {/* Mobile backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div
+            className={`fixed inset-0 sm:absolute sm:left-auto sm:right-0 sm:inset-auto sm:mt-2 w-full sm:w-56 h-full sm:h-auto overflow-y-auto sm:rounded-lg shadow-lg z-50 ${
+              isDark ? 'bg-slate-800 sm:border sm:border-slate-700' : 'bg-white sm:border sm:border-slate-200'
+            }`}
+          >
+            {/* Mobile header with close button */}
+            <div className={`sm:hidden sticky top-0 z-10 flex items-center justify-between p-4 border-b ${
+              isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <h2 className="text-lg font-semibold">Export Options</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'
+                }`}
+                aria-label="Close"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="py-2">
             {exportOptions.map((option) => {
               const Icon = option.icon;
               return (
@@ -324,6 +348,7 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
             })}
           </div>
         </div>
+        </>
       )}
     </div>
   );

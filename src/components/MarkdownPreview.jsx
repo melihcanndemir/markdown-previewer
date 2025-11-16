@@ -20,6 +20,10 @@ function MarkdownPreview({
   isFullScreen,
   onFullScreenToggle,
 }) {
+  // Get current theme (custom or preset)
+  const currentTheme = settings.previewStyle === 'custom' && settings.customTheme
+    ? settings.customTheme
+    : PREVIEW_STYLES[settings.previewStyle] || PREVIEW_STYLES.default;
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -75,7 +79,7 @@ function MarkdownPreview({
           flex-grow
           overflow-auto
           ${isDark ? "prose-invert" : ""}
-          ${PREVIEW_STYLES[settings.previewStyle]}
+          ${currentTheme.prose}
           [&>*:first-child]:mt-0
           [&>*:last-child]:mb-0
           [&_p]:my-1
@@ -105,6 +109,10 @@ function MarkdownPreview({
         `}
         style={{
           fontSize: FONT_SIZES[settings.fontSize],
+          '--heading-color': currentTheme.headingColor,
+          '--link-color': currentTheme.linkColor,
+          '--code-bg': currentTheme.codeBackground,
+          '--border-color': currentTheme.borderColor,
         }}
         role="article"
       >
@@ -113,13 +121,13 @@ function MarkdownPreview({
           components={{
             // Başlıklar için özel bileşen
             h1: ({ ...props }) => (
-              <h1 className="mt-3 mb-2" {...props} tabIndex={0} />
+              <h1 className="mt-3 mb-2" {...props} tabIndex={0} style={{ color: currentTheme.headingColor }} />
             ),
             h2: ({ ...props }) => (
-              <h2 className="mt-2 mb-1" {...props} tabIndex={0} />
+              <h2 className="mt-2 mb-1" {...props} tabIndex={0} style={{ color: currentTheme.headingColor }} />
             ),
             h3: ({ ...props }) => (
-              <h3 className="mt-2 mb-1" {...props} tabIndex={0} />
+              <h3 className="mt-2 mb-1" {...props} tabIndex={0} style={{ color: currentTheme.headingColor }} />
             ),
             // Paragraflar için özel bileşen
             p: ({ children, ...props }) => (
@@ -156,7 +164,7 @@ function MarkdownPreview({
                   {String(children).replace(/\n$/, "")}
                 </SyntaxHighlighter>
               ) : (
-                <code {...props} className={className} role="code" tabIndex={0}>
+                <code {...props} className={className} role="code" tabIndex={0} style={{ backgroundColor: currentTheme.codeBackground }}>
                   {children}
                 </code>
               );
@@ -197,6 +205,7 @@ function MarkdownPreview({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                style={{ color: currentTheme.linkColor }}
               />
             ),
             // Görseller için özel bileşen
