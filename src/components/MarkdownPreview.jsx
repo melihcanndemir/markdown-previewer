@@ -75,7 +75,7 @@ function MarkdownPreview({
           flex-grow
           overflow-auto
           ${isDark ? "prose-invert" : ""}
-          ${PREVIEW_STYLES[settings.previewStyle]}
+          ${PREVIEW_STYLES[settings.previewStyle]?.prose || PREVIEW_STYLES.default.prose}
           [&>*:first-child]:mt-0
           [&>*:last-child]:mb-0
           [&_p]:my-1
