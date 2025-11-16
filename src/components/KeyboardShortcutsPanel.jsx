@@ -39,9 +39,9 @@ const KeyboardShortcutsPanel = ({ isOpen, onClose, isDark }) => {
   const platform = isMac() ? 'macOS' : 'Windows/Linux';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4 bg-black bg-opacity-60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl ${
+        className={`w-full sm:max-w-5xl h-full sm:h-auto sm:max-h-[90vh] overflow-hidden sm:rounded-2xl shadow-2xl ${
           isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
         } flex flex-col animate-in zoom-in-95 duration-200`}
       >

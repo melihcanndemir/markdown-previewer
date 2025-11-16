@@ -6,6 +6,7 @@ import {
   BookmarkIcon,
   PlusCircleIcon,
   TrashIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { TEMPLATE_PRESETS } from './templates';
 
@@ -123,13 +124,36 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
       </button>
 
       {isOpen && (
-        <div
-          className={`absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg shadow-lg z-50 ${
-            isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
-          }`}
-        >
-          {/* Save Current as Template */}
-          <div className={`p-3 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+        <>
+          {/* Mobile backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div
+            className={`fixed inset-0 sm:absolute sm:left-auto sm:right-0 sm:inset-auto sm:mt-2 w-full sm:w-80 h-full sm:h-auto sm:max-h-96 overflow-y-auto sm:rounded-lg shadow-lg z-50 ${
+              isDark ? 'bg-slate-800 sm:border sm:border-slate-700' : 'bg-white sm:border sm:border-slate-200'
+            }`}
+          >
+            {/* Mobile header with close button */}
+            <div className={`sm:hidden sticky top-0 z-10 flex items-center justify-between p-4 border-b ${
+              isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <h2 className="text-lg font-semibold">Templates</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'
+                }`}
+                aria-label="Close"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Save Current as Template */}
+            <div className={`p-3 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             {!showSaveDialog ? (
               <button
                 onClick={() => setShowSaveDialog(true)}
@@ -240,6 +264,7 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
             </p>
           </div>
         </div>
+        </>
       )}
     </div>
   );

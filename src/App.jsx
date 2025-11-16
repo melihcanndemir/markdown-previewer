@@ -194,7 +194,11 @@ function App() {
       let newText;
       let newCursorPos;
 
-      if (replace && start !== end) {
+      if (replace === 'replaceAll') {
+        // Replace entire document
+        newText = text;
+        newCursorPos = text.length;
+      } else if (replace && start !== end) {
         // Replace selected text
         newText = markdown.substring(0, start) + text + markdown.substring(end);
         newCursorPos = start + text.length;
@@ -553,6 +557,7 @@ function App() {
         isOpen={isAIOpen}
         onClose={() => setIsAIOpen(false)}
         selectedText={selectedText}
+        markdown={markdown}
         onInsertText={handleInsertAIText}
         darkMode={isDark}
       />

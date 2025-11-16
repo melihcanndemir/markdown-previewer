@@ -130,9 +130,9 @@ const ThemeCustomizer = ({ isOpen, onClose, isDark, onThemeChange }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4 bg-black bg-opacity-60 backdrop-blur-sm">
       <div
-        className={`w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl ${
+        className={`w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-hidden sm:rounded-2xl shadow-2xl ${
           isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
         } flex flex-col`}
       >
