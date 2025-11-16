@@ -5,6 +5,7 @@ import Toolbar from "./components/Toolbar";
 import Settings from "./components/Settings";
 import GeminiAssistant from "./components/GeminiAssistant";
 import KeyboardShortcutsPanel from "./components/KeyboardShortcutsPanel";
+import ThemeCustomizer from "./components/ThemeCustomizer";
 import {
   SunIcon,
   MoonIcon,
@@ -66,6 +67,19 @@ function App() {
 
   // Keyboard Shortcuts Panel state
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Theme Customizer state
+  const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
+
+  // Custom theme handler
+  const handleThemeChange = useCallback((theme) => {
+    // Apply custom theme to settings
+    setSettings(prev => ({
+      ...prev,
+      customTheme: theme,
+      previewStyle: 'custom',
+    }));
+  }, []);
 
   // Responsive Layout Management
   const handleResize = useCallback(() => {
@@ -550,6 +564,14 @@ function App() {
         isDark={isDark}
       />
 
+      {/* Theme Customizer */}
+      <ThemeCustomizer
+        isOpen={isThemeCustomizerOpen}
+        onClose={() => setIsThemeCustomizerOpen(false)}
+        isDark={isDark}
+        onThemeChange={handleThemeChange}
+      />
+
       {/* Footer */}
       <footer
         className={`mt-auto py-4 sm:py-6 ${
@@ -593,6 +615,22 @@ function App() {
             </div>
 
             <div className="flex items-center gap-4 flex-wrap justify-center">
+              <button
+                onClick={() => setIsThemeCustomizerOpen(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 ${
+                  isDark
+                    ? "bg-pink-900/30 hover:bg-pink-800/40 text-pink-300 border border-pink-700/50"
+                    : "bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300"
+                }`}
+                title="Customize preview theme"
+                aria-label="Customize preview theme"
+              >
+                <span className="text-lg">🎨</span>
+                <span className="font-medium text-sm sm:text-base">
+                  Theme Customizer
+                </span>
+              </button>
+
               <button
                 onClick={() => setIsShortcutsOpen(true)}
                 className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 ${
