@@ -11,6 +11,18 @@ export const KEYBOARD_SHORTCUTS = {
         action: 'Save to localStorage',
       },
       {
+        keys: ['Alt', 'T'],
+        macKeys: ['Alt', 'T'],
+        description: 'New tab',
+        action: 'Create a new tab',
+      },
+      {
+        keys: ['Alt', 'W'],
+        macKeys: ['Alt', 'W'],
+        description: 'Close tab',
+        action: 'Close current tab',
+      },
+      {
         keys: ['Ctrl', 'B'],
         macKeys: ['⌘', 'B'],
         description: 'Toggle editor fullscreen',

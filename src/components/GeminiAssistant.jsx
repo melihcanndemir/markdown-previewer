@@ -117,7 +117,8 @@ const GeminiAssistant = ({ isOpen, onClose, selectedText, markdown, onInsertText
       setError('No text available to process.');
       return;
     }
-    callGeminiAPI(customPrompt + '\n\n', textToProcess);
+    const enhancedPrompt = customPrompt + '\n\nIMPORTANT: Start directly with the content. Do not begin with meta-commentary like "Here is", "Sure", "Okay", "Tamam, işte" or similar phrases.\n\n';
+    callGeminiAPI(enhancedPrompt, textToProcess);
   };
 
   const handleCopy = () => {
