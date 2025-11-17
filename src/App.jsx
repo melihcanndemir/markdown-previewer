@@ -7,6 +7,7 @@ import GeminiAssistant from "./components/GeminiAssistant";
 import KeyboardShortcutsPanel from "./components/KeyboardShortcutsPanel";
 import ThemeCustomizer from "./components/ThemeCustomizer";
 import VersionHistory from "./components/VersionHistory";
+import TabBar from "./components/TabBar";
 import {
   SunIcon,
   MoonIcon,
@@ -20,11 +21,35 @@ import {
 const DEFAULT_MARKDOWN = "# Welcome!\n\nWrite markdown here...";
 
 function App() {
-  // State Management with localStorage
-  const [markdown, setMarkdown] = useState(() => {
-    const saved = localStorage.getItem("markdown-content");
-    return saved || DEFAULT_MARKDOWN;
+  // Tabs State Management
+  const [tabs, setTabs] = useState(() => {
+    const saved = localStorage.getItem("markdown-tabs");
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [{
+      id: `tab-${Date.now()}`,
+      name: 'Untitled 1',
+      content: DEFAULT_MARKDOWN
+    }];
   });
+
+  const [activeTabId, setActiveTabId] = useState(() => {
+    const saved = localStorage.getItem("active-tab-id");
+    return saved || tabs[0]?.id;
+  });
+
+  // Get current tab
+  const activeTab = tabs.find(tab => tab.id === activeTabId) || tabs[0];
+  const markdown = activeTab?.content || DEFAULT_MARKDOWN;
+
+  const setMarkdown = (content) => {
+    setTabs(prevTabs =>
+      prevTabs.map(tab =>
+        tab.id === activeTabId ? { ...tab, content } : tab
+      )
+    );
+  };
 
   // Theme state
   const [isDark, setIsDark] = useState(() => {
@@ -90,6 +115,39 @@ function App() {
     }));
   }, []);
 
+  // Tab Management Functions
+  const handleTabAdd = useCallback(() => {
+    const newTab = {
+      id: `tab-${Date.now()}`,
+      name: `Untitled ${tabs.length + 1}`,
+      content: DEFAULT_MARKDOWN
+    };
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(newTab.id);
+  }, [tabs.length]);
+
+  const handleTabClose = useCallback((tabId) => {
+    if (tabs.length === 1) return; // Don't close last tab
+
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    const newTabs = tabs.filter(t => t.id !== tabId);
+    setTabs(newTabs);
+
+    // Switch to adjacent tab if closing active tab
+    if (tabId === activeTabId) {
+      const newActiveIndex = Math.min(tabIndex, newTabs.length - 1);
+      setActiveTabId(newTabs[newActiveIndex].id);
+    }
+  }, [tabs, activeTabId]);
+
+  const handleTabRename = useCallback((tabId, newName) => {
+    setTabs(prev =>
+      prev.map(tab =>
+        tab.id === tabId ? { ...tab, name: newName } : tab
+      )
+    );
+  }, []);
+
   // Version Management
   const handleSaveVersion = useCallback((name) => {
     const newVersion = {
@@ -143,8 +201,12 @@ function App() {
 
   // LocalStorage Effects
   useEffect(() => {
-    localStorage.setItem("markdown-content", markdown);
-  }, [markdown]);
+    localStorage.setItem("markdown-tabs", JSON.stringify(tabs));
+  }, [tabs]);
+
+  useEffect(() => {
+    localStorage.setItem("active-tab-id", activeTabId);
+  }, [activeTabId]);
 
   useEffect(() => {
     localStorage.setItem("markdown-theme", JSON.stringify(isDark));
@@ -158,11 +220,11 @@ function App() {
   useEffect(() => {
     if (settings.autoSave) {
       const timeoutId = setTimeout(() => {
-        localStorage.setItem("markdown-content", markdown);
+        localStorage.setItem("markdown-tabs", JSON.stringify(tabs));
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [markdown, settings.autoSave]);
+  }, [tabs, settings.autoSave]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -177,11 +239,29 @@ function App() {
         return;
       }
 
+      // Alt+T for new tab, Alt+W for close tab
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "t":
+            e.preventDefault();
+            handleTabAdd();
+            break;
+          case "w":
+            if (tabs.length > 1) {
+              e.preventDefault();
+              handleTabClose(activeTabId);
+            }
+            break;
+          default:
+            break;
+        }
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key.toLowerCase()) {
           case "s":
             e.preventDefault();
-            localStorage.setItem("markdown-content", markdown);
+            localStorage.setItem("markdown-tabs", JSON.stringify(tabs));
             break;
           case "b":
             e.preventDefault();
@@ -195,7 +275,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [markdown]);
+  }, [tabs, activeTabId, handleTabAdd, handleTabClose]);
 
   const toggleFullScreen = useCallback(async () => {
     try {
@@ -552,8 +632,19 @@ function App() {
             </div>
           )}
 
+          {/* Tab Bar */}
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabChange={setActiveTabId}
+            onTabClose={handleTabClose}
+            onTabAdd={handleTabAdd}
+            onTabRename={handleTabRename}
+            isDark={isDark}
+          />
+
           {/* Main Content Area */}
-          <div className="flex-grow flex flex-col">
+          <div className="flex-grow flex flex-col mt-2">
             <div
               className={`grid gap-3 sm:gap-4 md:gap-6 ${
                 !isEditorExpanded && !isPreviewExpanded

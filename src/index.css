@@ -1,3 +1,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Modern Scrollbar Styles */
+@layer utilities {
+  /* Custom scrollbar for light mode */
+  .scrollbar-modern::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* Custom scrollbar for dark mode */
+  .scrollbar-modern-dark::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-modern-dark::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .scrollbar-modern-dark::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+
+  .scrollbar-modern-dark::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}

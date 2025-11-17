@@ -24,9 +24,9 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
-    return date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
 
   const getStats = (content) => {
@@ -38,7 +38,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
 
   const handleSaveVersion = () => {
     if (!versionName.trim()) {
-      alert('Lütfen version için bir isim girin');
+      alert('Please enter a name for the version');
       return;
     }
     onSaveVersion(versionName);
@@ -47,14 +47,14 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
   };
 
   const handleRestore = (version) => {
-    if (window.confirm(`"${version.name}" versiyonuna geri dönmek istediğinize emin misiniz?`)) {
+    if (window.confirm(`Are you sure you want to restore version "${version.name}"?`)) {
       onRestore(version);
       onClose();
     }
   };
 
   const handleDelete = (versionId) => {
-    if (window.confirm('Bu versiyonu silmek istediğinize emin misiniz?')) {
+    if (window.confirm('Are you sure you want to delete this version?')) {
       onDelete(versionId);
     }
   };
@@ -82,7 +82,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
             <div className="min-w-0">
               <h2 className="text-lg sm:text-2xl font-bold truncate">Version History</h2>
               <p className={`text-xs sm:text-sm truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {versions.length} version kayıtlı
+                {versions.length} {versions.length === 1 ? 'version' : 'versions'} saved
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className={`flex-1 overflow-y-auto p-4 sm:p-6 ${isDark ? 'scrollbar-modern-dark' : 'scrollbar-modern'}`}>
           {/* Save New Version */}
           <div className={`mb-4 sm:mb-6 p-3 sm:p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             {!showSaveDialog ? (
@@ -107,7 +107,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                 className="w-full px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <PlusCircleIcon className="w-5 h-5" />
-                <span className="text-sm sm:text-base">Mevcut Metni Versiyonla</span>
+                <span className="text-sm sm:text-base">Save Current Text as Version</span>
               </button>
             ) : (
               <div className="space-y-2">
@@ -115,7 +115,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                   type="text"
                   value={versionName}
                   onChange={(e) => setVersionName(e.target.value)}
-                  placeholder="Version adı (örn: 'İlk taslak', 'Final sürüm')"
+                  placeholder="Version name (e.g., 'First draft', 'Final version')"
                   className={`w-full px-3 py-2 rounded-lg border text-sm ${
                     isDark
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
@@ -129,7 +129,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                     onClick={handleSaveVersion}
                     className="flex-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium"
                   >
-                    Kaydet
+                    Save
                   </button>
                   <button
                     onClick={() => {
@@ -142,7 +142,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                         : 'bg-gray-200 hover:bg-gray-300 text-slate-800'
                     }`}
                   >
-                    İptal
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -153,8 +153,8 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
           {versions.length === 0 ? (
             <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               <ClockIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">Henüz hiç version kaydedilmemiş</p>
-              <p className="text-sm mt-2">Mevcut metninizi versiyonlamak için yukarıdaki butonu kullanın</p>
+              <p className="text-lg font-medium">No versions saved yet</p>
+              <p className="text-sm mt-2">Use the button above to save your current text as a version</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -183,11 +183,11 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                           {formatDate(version.timestamp)}
                         </p>
                         <div className={`flex flex-wrap gap-3 mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          <span>{stats.chars} karakter</span>
+                          <span>{stats.chars} {stats.chars === 1 ? 'character' : 'characters'}</span>
                           <span>•</span>
-                          <span>{stats.words} kelime</span>
+                          <span>{stats.words} {stats.words === 1 ? 'word' : 'words'}</span>
                           <span>•</span>
-                          <span>{stats.lines} satır</span>
+                          <span>{stats.lines} {stats.lines === 1 ? 'line' : 'lines'}</span>
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2 flex-shrink-0">
@@ -197,7 +197,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                             handleRestore(version);
                           }}
                           className="p-1.5 sm:p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
-                          title="Bu versiyonu geri yükle"
+                          title="Restore this version"
                         >
                           <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
@@ -207,7 +207,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                             handleDelete(version.id);
                           }}
                           className="p-1.5 sm:p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
-                          title="Bu versiyonu sil"
+                          title="Delete this version"
                         >
                           <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>

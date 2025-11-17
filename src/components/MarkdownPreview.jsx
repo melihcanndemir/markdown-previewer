@@ -21,9 +21,25 @@ function MarkdownPreview({
   onFullScreenToggle,
 }) {
   // Get current theme (custom or preset)
-  const currentTheme = settings.previewStyle === 'custom' && settings.customTheme
+  const isCustomTheme = settings.previewStyle === 'custom' && settings.customTheme;
+  const baseTheme = isCustomTheme
     ? settings.customTheme
     : PREVIEW_STYLES[settings.previewStyle] || PREVIEW_STYLES.default;
+
+  // Select appropriate colors based on dark mode (only for preset themes)
+  const currentTheme = isCustomTheme ? {
+    prose: baseTheme.prose,
+    headingColor: baseTheme.headingColor,
+    linkColor: baseTheme.linkColor,
+    codeBackground: baseTheme.codeBackground,
+    borderColor: baseTheme.borderColor,
+  } : {
+    prose: baseTheme.prose,
+    headingColor: isDark ? baseTheme.headingColorDark : baseTheme.headingColor,
+    linkColor: isDark ? baseTheme.linkColorDark : baseTheme.linkColor,
+    codeBackground: isDark ? baseTheme.codeBackgroundDark : baseTheme.codeBackground,
+    borderColor: isDark ? baseTheme.borderColorDark : baseTheme.borderColor,
+  };
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -78,7 +94,7 @@ function MarkdownPreview({
           max-w-none
           flex-grow
           overflow-auto
-          ${isDark ? "prose-invert" : ""}
+          ${isDark ? "prose-invert scrollbar-modern-dark" : "scrollbar-modern"}
           ${currentTheme.prose}
           [&>*:first-child]:mt-0
           [&>*:last-child]:mb-0

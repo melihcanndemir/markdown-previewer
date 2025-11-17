@@ -289,8 +289,8 @@ function MarkdownEditor({
   }, [handleScroll]);
 
   const scrollbarClasses = isDark
-    ? "scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 hover:scrollbar-thumb-slate-500"
-    : "scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400";
+    ? "scrollbar-modern-dark"
+    : "scrollbar-modern";
 
   return (
     <div
@@ -353,8 +353,8 @@ function MarkdownEditor({
             ref={lineNumbersRef}
             className={`absolute left-0 top-0 h-full select-none font-mono ${
               isDark
-                ? "bg-slate-900/50 text-slate-500"
-                : "bg-slate-100 text-slate-400"
+                ? "bg-slate-900/50 text-slate-500 scrollbar-modern-dark"
+                : "bg-slate-100 text-slate-400 scrollbar-modern"
             }`}
             style={{
               width: "3.5em",
