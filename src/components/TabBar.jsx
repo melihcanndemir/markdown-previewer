@@ -39,7 +39,7 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
   };
 
   return (
-    <div className={`flex items-center gap-1 overflow-x-auto ${
+    <div className={`flex items-center gap-1 sm:gap-2 overflow-x-auto ${
       isDark ? 'bg-slate-900 scrollbar-modern-dark' : 'bg-slate-200 scrollbar-modern'
     } px-2 py-1 rounded-t-lg`}>
       {tabs.map((tab) => {
@@ -49,7 +49,7 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
         return (
           <div
             key={tab.id}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-t-lg transition-colors cursor-pointer min-w-[120px] max-w-[200px] group ${
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-t-lg transition-colors cursor-pointer min-w-[100px] sm:min-w-[120px] max-w-[150px] sm:max-w-[200px] group ${
               isActive
                 ? isDark
                   ? 'bg-slate-800 text-white'
@@ -61,60 +61,68 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
             onClick={() => !isEditing && onTabChange(tab.id)}
           >
             {isEditing ? (
-              <div className="flex items-center gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-0.5 sm:gap-1 flex-1 w-full" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, tab.id)}
-                  className={`flex-1 px-1 py-0.5 text-xs rounded border ${
+                  className={`flex-1 min-w-0 px-1 py-0.5 text-xs rounded border ${
                     isDark
                       ? 'bg-slate-700 border-slate-600 text-white'
                       : 'bg-white border-slate-300 text-slate-900'
                   } focus:outline-none focus:ring-1 focus:ring-purple-500`}
                   autoFocus
                 />
-                <button
-                  onClick={() => handleSaveEdit(tab.id)}
-                  className="p-0.5 hover:bg-green-500/20 rounded"
-                  title="Save"
-                >
-                  <CheckIcon className="w-3 h-3 text-green-500" />
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="p-0.5 hover:bg-red-500/20 rounded"
-                  title="Cancel"
-                >
-                  <XMarkIcon className="w-3 h-3 text-red-500" />
-                </button>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <button
+                    onClick={() => handleSaveEdit(tab.id)}
+                    className="p-0.5 sm:p-1 hover:bg-green-500/20 rounded transition-colors"
+                    title="Save"
+                    aria-label="Save tab name"
+                  >
+                    <CheckIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-500" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="p-0.5 sm:p-1 hover:bg-red-500/20 rounded transition-colors"
+                    title="Cancel"
+                    aria-label="Cancel editing"
+                  >
+                    <XMarkIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500" />
+                  </button>
+                </div>
               </div>
             ) : (
               <>
-                <span className="text-xs truncate flex-1">{tab.name}</span>
-                <button
-                  onClick={(e) => handleStartEdit(tab, e)}
-                  className={`p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
-                    isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'
-                  }`}
-                  title="Rename tab"
-                >
-                  <PencilIcon className="w-3 h-3" />
-                </button>
-                {tabs.length > 1 && (
+                <span className="text-xs truncate flex-1 min-w-0">{tab.name}</span>
+                <div className="flex items-center gap-0.5 flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTabClose(tab.id);
-                    }}
-                    className={`p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
-                      isDark ? 'hover:bg-red-500/20' : 'hover:bg-red-500/20'
+                    onClick={(e) => handleStartEdit(tab, e)}
+                    className={`p-0.5 sm:p-1 rounded transition-colors ${
+                      isDark ? 'hover:bg-slate-700 active:bg-slate-600' : 'hover:bg-slate-200 active:bg-slate-300'
                     }`}
-                    title="Close tab"
+                    title="Rename tab"
+                    aria-label="Rename tab"
                   >
-                    <XMarkIcon className="w-3 h-3" />
+                    <PencilIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
-                )}
+                  {tabs.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTabClose(tab.id);
+                      }}
+                      className={`p-0.5 sm:p-1 rounded transition-colors ${
+                        isDark ? 'hover:bg-red-500/20 active:bg-red-500/30' : 'hover:bg-red-500/20 active:bg-red-500/30'
+                      }`}
+                      title="Close tab"
+                      aria-label="Close tab"
+                    >
+                      <XMarkIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -124,14 +132,15 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
       {/* Add Tab Button */}
       <button
         onClick={onTabAdd}
-        className={`p-1.5 rounded-lg transition-colors ${
+        className={`p-1 sm:p-1.5 rounded-lg transition-colors flex-shrink-0 ${
           isDark
-            ? 'hover:bg-slate-700 text-slate-400 hover:text-white'
-            : 'hover:bg-slate-300 text-slate-600 hover:text-slate-900'
+            ? 'hover:bg-slate-700 active:bg-slate-600 text-slate-400 hover:text-white'
+            : 'hover:bg-slate-300 active:bg-slate-400 text-slate-600 hover:text-slate-900'
         }`}
         title="New tab (Alt+T)"
+        aria-label="Create new tab"
       >
-        <PlusIcon className="w-4 h-4" />
+        <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </div>
   );
