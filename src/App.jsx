@@ -6,6 +6,7 @@ import Settings from "./components/Settings";
 import GeminiAssistant from "./components/GeminiAssistant";
 import KeyboardShortcutsPanel from "./components/KeyboardShortcutsPanel";
 import ThemeCustomizer from "./components/ThemeCustomizer";
+import VersionHistory from "./components/VersionHistory";
 import {
   SunIcon,
   MoonIcon,
@@ -13,6 +14,7 @@ import {
   ArrowsPointingInIcon,
   Bars3Icon,
   XMarkIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 const DEFAULT_MARKDOWN = "# Welcome!\n\nWrite markdown here...";
@@ -71,6 +73,13 @@ function App() {
   // Theme Customizer state
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
+  // Version History state
+  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+  const [versions, setVersions] = useState(() => {
+    const saved = localStorage.getItem("markdown-versions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Custom theme handler
   const handleThemeChange = useCallback((theme) => {
     // Apply custom theme to settings
@@ -80,6 +89,36 @@ function App() {
       previewStyle: 'custom',
     }));
   }, []);
+
+  // Version Management
+  const handleSaveVersion = useCallback((name) => {
+    const newVersion = {
+      id: `version-${Date.now()}`,
+      name,
+      content: markdown,
+      timestamp: Date.now(),
+      isAutoSave: false,
+    };
+
+    const updatedVersions = [newVersion, ...versions];
+    setVersions(updatedVersions);
+    localStorage.setItem("markdown-versions", JSON.stringify(updatedVersions));
+  }, [markdown, versions]);
+
+  const handleRestoreVersion = useCallback((version) => {
+    setMarkdown(version.content);
+  }, []);
+
+  const handleDeleteVersion = useCallback((versionId) => {
+    const updatedVersions = versions.filter(v => v.id !== versionId);
+    setVersions(updatedVersions);
+    localStorage.setItem("markdown-versions", JSON.stringify(updatedVersions));
+  }, [versions]);
+
+  // Save versions to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem("markdown-versions", JSON.stringify(versions));
+  }, [versions]);
 
   // Responsive Layout Management
   const handleResize = useCallback(() => {
@@ -577,6 +616,18 @@ function App() {
         onThemeChange={handleThemeChange}
       />
 
+      {/* Version History */}
+      <VersionHistory
+        isOpen={isVersionHistoryOpen}
+        onClose={() => setIsVersionHistoryOpen(false)}
+        versions={versions}
+        onRestore={handleRestoreVersion}
+        onDelete={handleDeleteVersion}
+        onSaveVersion={handleSaveVersion}
+        currentMarkdown={markdown}
+        isDark={isDark}
+      />
+
       {/* Footer */}
       <footer
         className={`mt-auto py-4 sm:py-6 ${
@@ -655,6 +706,27 @@ function App() {
                 }`}>
                   ?
                 </kbd>
+              </button>
+
+              <button
+                onClick={() => setIsVersionHistoryOpen(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 ${
+                  isDark
+                    ? "bg-blue-900/30 hover:bg-blue-800/40 text-blue-300 border border-blue-700/50"
+                    : "bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300"
+                }`}
+                title="View version history"
+                aria-label="View version history"
+              >
+                <ClockIcon className="w-5 h-5" />
+                <span className="font-medium text-sm sm:text-base">
+                  Version History
+                </span>
+                <span className={`hidden sm:inline px-1.5 py-0.5 text-xs rounded ${
+                  isDark ? "bg-blue-900 text-blue-300" : "bg-blue-200 text-blue-800"
+                }`}>
+                  {versions.length}
+                </span>
               </button>
 
               <a
