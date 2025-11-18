@@ -445,6 +445,8 @@ function App() {
                   isMobile={isMobile}
                   onOpenAI={handleOpenAI}
                   settings={settings}
+                  tabs={tabs}
+                  activeTabId={activeTabId}
                 />
                 <div className="hidden sm:block h-6 w-px bg-slate-600/50" />
                 <Settings
@@ -544,6 +546,8 @@ function App() {
                   onFullScreenToggle={toggleFullScreen}
                   onOpenAI={handleOpenAI}
                   settings={settings}
+                  tabs={tabs}
+                  activeTabId={activeTabId}
                 />
               </div>
 

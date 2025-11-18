@@ -262,6 +262,113 @@ function MarkdownEditor({
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
 
+  // Smart auto-completion pairs
+  const completionPairs = {
+    '(': ')',
+    '[': ']',
+    '{': '}',
+    '"': '"',
+    "'": "'",
+    '`': '`',
+    '*': '*',
+    '_': '_',
+  };
+
+  const handleKeyDown = useCallback((e) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const { selectionStart, selectionEnd, value } = textarea;
+    const selectedText = value.substring(selectionStart, selectionEnd);
+    const charBefore = value[selectionStart - 1];
+    const charAfter = value[selectionStart];
+
+    // Auto-close brackets, quotes, etc.
+    if (completionPairs[e.key] && !selectedText) {
+      // Don't auto-complete if next char is the same (avoid duplicates)
+      if (charAfter === completionPairs[e.key]) {
+        return;
+      }
+
+      e.preventDefault();
+      const pair = e.key + completionPairs[e.key];
+      const newValue = value.substring(0, selectionStart) + pair + value.substring(selectionEnd);
+      setMarkdown(newValue);
+
+      setTimeout(() => {
+        textarea.selectionStart = selectionStart + 1;
+        textarea.selectionEnd = selectionStart + 1;
+      }, 0);
+      return;
+    }
+
+    // Wrap selected text with pairs
+    if (completionPairs[e.key] && selectedText) {
+      e.preventDefault();
+      const wrapped = e.key + selectedText + completionPairs[e.key];
+      const newValue = value.substring(0, selectionStart) + wrapped + value.substring(selectionEnd);
+      setMarkdown(newValue);
+
+      setTimeout(() => {
+        textarea.selectionStart = selectionStart + 1;
+        textarea.selectionEnd = selectionEnd + 1;
+      }, 0);
+      return;
+    }
+
+    // Auto-continue lists on Enter
+    if (e.key === 'Enter') {
+      const lines = value.substring(0, selectionStart).split('\n');
+      const currentLine = lines[lines.length - 1];
+
+      // Unordered list continuation
+      const unorderedMatch = currentLine.match(/^(\s*)([-*+])\s/);
+      if (unorderedMatch) {
+        e.preventDefault();
+        const indent = unorderedMatch[1];
+        const bullet = unorderedMatch[2];
+        const newLine = `\n${indent}${bullet} `;
+        const newValue = value.substring(0, selectionStart) + newLine + value.substring(selectionEnd);
+        setMarkdown(newValue);
+
+        setTimeout(() => {
+          const newPos = selectionStart + newLine.length;
+          textarea.selectionStart = newPos;
+          textarea.selectionEnd = newPos;
+        }, 0);
+        return;
+      }
+
+      // Ordered list continuation
+      const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s/);
+      if (orderedMatch) {
+        e.preventDefault();
+        const indent = orderedMatch[1];
+        const nextNum = parseInt(orderedMatch[2]) + 1;
+        const newLine = `\n${indent}${nextNum}. `;
+        const newValue = value.substring(0, selectionStart) + newLine + value.substring(selectionEnd);
+        setMarkdown(newValue);
+
+        setTimeout(() => {
+          const newPos = selectionStart + newLine.length;
+          textarea.selectionStart = newPos;
+          textarea.selectionEnd = newPos;
+        }, 0);
+        return;
+      }
+    }
+
+    // Skip closing bracket if cursor is before it
+    if (e.key === ')' || e.key === ']' || e.key === '}') {
+      if (charAfter === e.key) {
+        e.preventDefault();
+        textarea.selectionStart = selectionStart + 1;
+        textarea.selectionEnd = selectionStart + 1;
+        return;
+      }
+    }
+  }, [setMarkdown]);
+
   const handleScroll = useCallback(() => {
     const textarea = textareaRef.current;
     const lineNumbers = lineNumbersRef.current;
@@ -291,6 +398,12 @@ function MarkdownEditor({
   const scrollbarClasses = isDark
     ? "scrollbar-modern-dark"
     : "scrollbar-modern";
+
+  // Calculate dynamic line number width based on line count
+  const lineCount = markdown.split("\n").length;
+  const digits = String(lineCount).length;
+  const lineNumberWidth = `${Math.max(2.5, 1.5 + digits * 0.6)}em`;
+  const textareaPaddingLeft = `${Math.max(3, 2 + digits * 0.6)}em`;
 
   return (
     <div
@@ -347,17 +460,18 @@ function MarkdownEditor({
       )}
 
       {/* Editor Area */}
-      <div className="flex-grow relative">
+      <div className="flex-grow relative -mx-4 px-4">
         {settings.showLineNumbers && (
           <div
             ref={lineNumbersRef}
-            className={`absolute left-0 top-0 h-full select-none font-mono ${
+            className={`absolute top-0 h-full select-none font-mono ${
               isDark
                 ? "bg-slate-900/50 text-slate-500 scrollbar-modern-dark"
                 : "bg-slate-100 text-slate-400 scrollbar-modern"
             }`}
             style={{
-              width: "3.5em",
+              left: 0,
+              width: lineNumberWidth,
               borderRight: `1px solid ${isDark ? "#475569" : "#e2e8f0"}`,
               fontSize: FONT_SIZES[settings.fontSize],
               lineHeight: "1.5rem",
@@ -370,7 +484,7 @@ function MarkdownEditor({
               <div
                 key={idx}
                 style={{
-                  paddingRight: "0.75rem",
+                  paddingRight: "0.5rem",
                   textAlign: "right",
                   height: "1.5rem",
                 }}
@@ -385,6 +499,7 @@ function MarkdownEditor({
           ref={textareaRef}
           value={markdown}
           onChange={(e) => setMarkdown(e.target.value)}
+          onKeyDown={handleKeyDown}
           className={`w-full min-h-full outline-none rounded-lg font-mono resize-none ${
             isDark ? "bg-slate-900 text-gray-100" : "bg-slate-50 text-slate-900"
           } focus:ring-2 focus:ring-purple-500 ${scrollbarClasses}`}
@@ -392,7 +507,7 @@ function MarkdownEditor({
             fontSize: FONT_SIZES[settings.fontSize],
             lineHeight: "1.5rem",
             padding: settings.showLineNumbers
-              ? "0.75rem 0.75rem 0.75rem 4em"
+              ? `0.75rem 0.75rem 0.75rem ${textareaPaddingLeft}`
               : "0.75rem",
             height: `${Math.max(markdown.split("\n").length * 24 + 48, 200)}px`,
           }}

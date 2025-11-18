@@ -7,11 +7,13 @@ import {
   DocumentIcon,
   CodeBracketIcon,
   XMarkIcon,
+  FolderArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
 
-const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
+const ExportMenu = ({ markdown, isDark, previewStyle, onNotification, tabs, activeTabId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const menuRef = useRef(null);
@@ -250,6 +252,56 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
     }
   };
 
+  // Batch Export All Tabs as ZIP
+  const exportAllTabsAsZip = async () => {
+    try {
+      if (!tabs || tabs.length === 0) {
+        onNotification?.('No tabs to export', 'error');
+        return;
+      }
+
+      setIsExporting(true);
+      const zip = new JSZip();
+
+      // Add each tab as a markdown file
+      tabs.forEach((tab, index) => {
+        const fileName = `${tab.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
+        zip.file(fileName, tab.content);
+      });
+
+      // Add a README with metadata
+      const readme = `# Markdown Export
+Exported on: ${new Date().toLocaleString()}
+Total tabs: ${tabs.length}
+
+## Files:
+${tabs.map((tab, i) => `${i + 1}. ${tab.name}`).join('\n')}
+`;
+      zip.file('README.md', readme);
+
+      // Generate ZIP
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      // Download
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `markdown-export-${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onNotification?.(`Exported ${tabs.length} tabs successfully`, 'success');
+    } catch (error) {
+      console.error('Batch export error:', error);
+      onNotification?.('Failed to export tabs', 'error');
+    } finally {
+      setIsExporting(false);
+      setIsOpen(false);
+    }
+  };
+
   const exportOptions = [
     {
       id: 'markdown',
@@ -273,6 +325,16 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
       color: 'text-red-500',
     },
   ];
+
+  // Add batch export option if multiple tabs exist
+  const batchExportOption = tabs && tabs.length > 1 ? {
+    id: 'batch-zip',
+    label: `Export All Tabs (${tabs.length}) as ZIP`,
+    icon: FolderArrowDownIcon,
+    handler: exportAllTabsAsZip,
+    color: 'text-purple-500',
+    badge: tabs.length,
+  } : null;
 
   return (
     <div className="relative" ref={menuRef}>
@@ -346,6 +408,31 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification }) => {
                 </button>
               );
             })}
+
+            {/* Batch Export Option (if multiple tabs) */}
+            {batchExportOption && (
+              <>
+                <div className={`mx-4 my-2 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />
+                <button
+                  key={batchExportOption.id}
+                  onClick={batchExportOption.handler}
+                  disabled={isExporting}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                    isDark
+                      ? 'hover:bg-slate-700 text-slate-200'
+                      : 'hover:bg-slate-100 text-slate-800'
+                  } ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <batchExportOption.icon className={`w-5 h-5 ${batchExportOption.color}`} />
+                  <span className="text-sm font-medium flex-1">{batchExportOption.label}</span>
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    isDark ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-700'
+                  }`}>
+                    {batchExportOption.badge}
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
         </>
@@ -359,6 +446,8 @@ ExportMenu.propTypes = {
   isDark: PropTypes.bool.isRequired,
   previewStyle: PropTypes.string,
   onNotification: PropTypes.func,
+  tabs: PropTypes.array,
+  activeTabId: PropTypes.string,
 };
 
 export default ExportMenu;
