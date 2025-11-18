@@ -8,6 +8,11 @@ import KeyboardShortcutsPanel from "./components/KeyboardShortcutsPanel";
 import ThemeCustomizer from "./components/ThemeCustomizer";
 import VersionHistory from "./components/VersionHistory";
 import TabBar from "./components/TabBar";
+import UserMenu from "./components/Auth/UserMenu";
+import LoginModal from "./components/Auth/LoginModal";
+import RegisterModal from "./components/Auth/RegisterModal";
+import ResetPasswordModal from "./components/Auth/ResetPasswordModal";
+import { useAuth } from "./contexts/AuthContext";
 import {
   SunIcon,
   MoonIcon,
@@ -21,6 +26,9 @@ import {
 const DEFAULT_MARKDOWN = "# Welcome!\n\nWrite markdown here...";
 
 function App() {
+  // Auth
+  const { user, syncToCloud, fetchFromCloud, mergeLocalAndCloudTabs, syncSingleTabToCloud, deleteTabFromCloudById } = useAuth();
+
   // Tabs State Management
   const [tabs, setTabs] = useState(() => {
     const saved = localStorage.getItem("markdown-tabs");
@@ -44,11 +52,26 @@ function App() {
   const markdown = activeTab?.content || DEFAULT_MARKDOWN;
 
   const setMarkdown = (content) => {
-    setTabs(prevTabs =>
-      prevTabs.map(tab =>
+    setTabs(prevTabs => {
+      const updatedTabs = prevTabs.map(tab =>
         tab.id === activeTabId ? { ...tab, content } : tab
-      )
-    );
+      );
+
+      // Sync only the changed tab to cloud (debounced via useRef)
+      if (user) {
+        const changedTab = updatedTabs.find(tab => tab.id === activeTabId);
+        if (changedTab) {
+          // Clear previous timeout
+          if (window.syncTimeoutId) clearTimeout(window.syncTimeoutId);
+          // Debounce sync for 2 seconds
+          window.syncTimeoutId = setTimeout(() => {
+            syncSingleTabToCloud(changedTab);
+          }, 2000);
+        }
+      }
+
+      return updatedTabs;
+    });
   };
 
   // Theme state
@@ -105,6 +128,9 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Auth Modal States
+  const [authModal, setAuthModal] = useState(''); // 'login', 'register', 'reset', ''
+
   // Custom theme handler
   const handleThemeChange = useCallback((theme) => {
     // Apply custom theme to settings
@@ -124,7 +150,12 @@ function App() {
     };
     setTabs(prev => [...prev, newTab]);
     setActiveTabId(newTab.id);
-  }, [tabs.length]);
+
+    // Sync new tab to cloud
+    if (user) {
+      syncSingleTabToCloud(newTab);
+    }
+  }, [tabs.length, user, syncSingleTabToCloud]);
 
   const handleTabClose = useCallback((tabId) => {
     if (tabs.length === 1) return; // Don't close last tab
@@ -133,20 +164,35 @@ function App() {
     const newTabs = tabs.filter(t => t.id !== tabId);
     setTabs(newTabs);
 
+    // Delete tab from cloud
+    if (user) {
+      deleteTabFromCloudById(tabId);
+    }
+
     // Switch to adjacent tab if closing active tab
     if (tabId === activeTabId) {
       const newActiveIndex = Math.min(tabIndex, newTabs.length - 1);
       setActiveTabId(newTabs[newActiveIndex].id);
     }
-  }, [tabs, activeTabId]);
+  }, [tabs, activeTabId, user, deleteTabFromCloudById]);
 
   const handleTabRename = useCallback((tabId, newName) => {
-    setTabs(prev =>
-      prev.map(tab =>
+    setTabs(prev => {
+      const updatedTabs = prev.map(tab =>
         tab.id === tabId ? { ...tab, name: newName } : tab
-      )
-    );
-  }, []);
+      );
+
+      // Sync the renamed tab to cloud
+      if (user) {
+        const renamedTab = updatedTabs.find(tab => tab.id === tabId);
+        if (renamedTab) {
+          syncSingleTabToCloud(renamedTab);
+        }
+      }
+
+      return updatedTabs;
+    });
+  }, [user, syncSingleTabToCloud]);
 
   // Version Management
   const handleSaveVersion = useCallback((name) => {
@@ -225,6 +271,31 @@ function App() {
       return () => clearTimeout(timeoutId);
     }
   }, [tabs, settings.autoSave]);
+
+  // Cloud Sync: Fetch tabs on login
+  useEffect(() => {
+    const syncOnLogin = async () => {
+      if (user) {
+        const cloudTabs = await fetchFromCloud();
+        if (cloudTabs && cloudTabs.length > 0) {
+          const localTabs = tabs;
+          const mergedTabs = mergeLocalAndCloudTabs(localTabs, cloudTabs);
+          setTabs(mergedTabs);
+          if (mergedTabs.length > 0) {
+            setActiveTabId(mergedTabs[0].id);
+          }
+        }
+      }
+    };
+
+    syncOnLogin();
+  }, [user?.id]); // Only run when user logs in/out
+
+  // Note: Individual tab syncing is now handled in:
+  // - setMarkdown() for content changes
+  // - handleTabRename() for name changes
+  // - handleTabAdd() for new tabs
+  // - handleTabClose() for deletions
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -456,6 +527,11 @@ function App() {
                   isMobile={isMobile}
                   orientation={orientation}
                 />
+                <div className="hidden sm:block h-6 w-px bg-slate-600/50" />
+                <UserMenu
+                  isDark={isDark}
+                  onOpenLogin={() => setAuthModal('login')}
+                />
 
                 {/* Theme Toggle */}
                 <button
@@ -566,6 +642,21 @@ function App() {
                   onSettingsChange={setSettings}
                   isMobile={isMobile}
                   orientation={orientation}
+                />
+              </div>
+
+              <hr
+                className={`border-1 ${
+                  isDark ? "border-slate-700" : "border-slate-300"
+                }`}
+              />
+
+              {/* User Account */}
+              <div className="flex flex-col gap-2">
+                <span className="font-medium text-base">Account</span>
+                <UserMenu
+                  isDark={isDark}
+                  onOpenLogin={() => setAuthModal('login')}
                 />
               </div>
 
@@ -721,6 +812,29 @@ function App() {
         onSaveVersion={handleSaveVersion}
         currentMarkdown={markdown}
         isDark={isDark}
+      />
+
+      {/* Auth Modals */}
+      <LoginModal
+        isOpen={authModal === 'login'}
+        onClose={() => setAuthModal('')}
+        isDark={isDark}
+        onSwitchToRegister={() => setAuthModal('register')}
+        onSwitchToReset={() => setAuthModal('reset')}
+      />
+
+      <RegisterModal
+        isOpen={authModal === 'register'}
+        onClose={() => setAuthModal('')}
+        isDark={isDark}
+        onSwitchToLogin={() => setAuthModal('login')}
+      />
+
+      <ResetPasswordModal
+        isOpen={authModal === 'reset'}
+        onClose={() => setAuthModal('')}
+        isDark={isDark}
+        onSwitchToLogin={() => setAuthModal('login')}
       />
 
       {/* Footer */}
