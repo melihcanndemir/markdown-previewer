@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 
-const UserMenu = ({ isDark, onOpenLogin }) => {
+const UserMenu = ({ isDark, onOpenLogin, onOpenAccountSettings }) => {
   const { user, signOut, syncStatus, lastSyncTime } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -52,6 +52,7 @@ const UserMenu = ({ isDark, onOpenLogin }) => {
 
   const userInitial = user.email?.[0]?.toUpperCase() || '?';
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const avatarUrl = user.user_metadata?.avatar_url;
 
   return (
     <div className="relative" ref={menuRef}>
@@ -61,9 +62,20 @@ const UserMenu = ({ isDark, onOpenLogin }) => {
           isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-200'
         }`}
       >
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={displayName}
+            className="w-8 h-8 rounded-full object-cover border-2 border-blue-500"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : null}
         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
           isDark ? 'bg-blue-700 text-white' : 'bg-blue-500 text-white'
-        }`}>
+        } ${avatarUrl ? 'hidden' : 'flex'}`}>
           {userInitial}
         </div>
         <span className="hidden sm:inline text-sm font-medium truncate max-w-[100px]">
@@ -90,9 +102,20 @@ const UserMenu = ({ isDark, onOpenLogin }) => {
             {/* User Info */}
             <div className={`p-4 border-b ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
               <div className="flex items-center gap-3">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-blue-500"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
                   isDark ? 'bg-blue-700 text-white' : 'bg-blue-500 text-white'
-                }`}>
+                } ${avatarUrl ? 'hidden' : 'flex'}`}>
                   {userInitial}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -134,6 +157,10 @@ const UserMenu = ({ isDark, onOpenLogin }) => {
               </button>
 
               <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenAccountSettings();
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                   isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-800'
                 }`}
@@ -169,6 +196,7 @@ const UserMenu = ({ isDark, onOpenLogin }) => {
 UserMenu.propTypes = {
   isDark: PropTypes.bool.isRequired,
   onOpenLogin: PropTypes.func.isRequired,
+  onOpenAccountSettings: PropTypes.func.isRequired,
 };
 
 export default UserMenu;
