@@ -12,6 +12,7 @@ import UserMenu from "./components/Auth/UserMenu";
 import LoginModal from "./components/Auth/LoginModal";
 import RegisterModal from "./components/Auth/RegisterModal";
 import ResetPasswordModal from "./components/Auth/ResetPasswordModal";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { useAuth } from "./contexts/AuthContext";
 import {
   SunIcon,
@@ -813,6 +814,9 @@ function App() {
         currentMarkdown={markdown}
         isDark={isDark}
       />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt isDark={isDark} />
 
       {/* Auth Modals */}
       <LoginModal
