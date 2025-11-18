@@ -9,7 +9,7 @@ import {
 import ExportMenu from "./ExportMenu";
 import TemplateMenu from "./TemplateMenu";
 
-function Toolbar({ markdown, setMarkdown, isDark, onOpenAI, settings }) {
+function Toolbar({ markdown, setMarkdown, isDark, onOpenAI, settings, tabs, activeTabId }) {
   const [notification, setNotification] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
@@ -167,6 +167,8 @@ function Toolbar({ markdown, setMarkdown, isDark, onOpenAI, settings }) {
           isDark={isDark}
           previewStyle={settings?.previewStyle}
           onNotification={showNotification}
+          tabs={tabs}
+          activeTabId={activeTabId}
         />
 
         {/* AI Assistant Button */}
@@ -242,6 +244,8 @@ Toolbar.propTypes = {
   isDark: PropTypes.bool.isRequired,
   onOpenAI: PropTypes.func,
   settings: PropTypes.object,
+  tabs: PropTypes.array,
+  activeTabId: PropTypes.string,
 };
 
 export default Toolbar;
