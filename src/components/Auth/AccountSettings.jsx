@@ -87,7 +87,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
       (error, result) => {
         if (error) {
           console.error('Cloudinary widget error:', error);
-          setMessage({ type: 'error', text: 'Resim yüklenirken hata oluştu!' });
+          setMessage({ type: 'error', text: 'Error uploading image!' });
           setUploading(false);
           return;
         }
@@ -105,9 +105,9 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
           }).then(({ error }) => {
             if (error) {
               console.error('Avatar update error:', error);
-              setMessage({ type: 'error', text: 'Avatar kaydedilemedi!' });
+              setMessage({ type: 'error', text: 'Failed to save avatar!' });
             } else {
-              setMessage({ type: 'success', text: 'Avatar başarıyla güncellendi!' });
+              setMessage({ type: 'success', text: 'Avatar successfully updated!' });
             }
           });
         }
@@ -124,7 +124,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     } else {
       setMessage({
         type: 'error',
-        text: 'Yükleme widget\'ı hazır değil. Lütfen tekrar deneyin.'
+        text: 'Upload widget is not ready. Please try again.'
       });
     }
   };
@@ -185,7 +185,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
       setAvatarUrl('');
       setMessage({
         type: 'success',
-        text: 'Avatar kaldırıldı!'
+        text: 'Avatar removed!'
       });
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
@@ -209,7 +209,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
 
       if (error) throw error;
 
-      setMessage({ type: 'success', text: 'Profil başarıyla güncellendi!' });
+      setMessage({ type: 'success', text: 'Profile successfully updated!' });
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -223,13 +223,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     setMessage({ type: '', text: '' });
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Yeni şifreler eşleşmiyor!' });
+      setMessage({ type: 'error', text: 'New passwords do not match!' });
       setLoading(false);
       return;
     }
 
     if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Şifre en az 6 karakter olmalı!' });
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters!' });
       setLoading(false);
       return;
     }
@@ -238,7 +238,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
       const { error } = await updatePassword(newPassword);
       if (error) throw error;
 
-      setMessage({ type: 'success', text: 'Şifre başarıyla güncellendi!' });
+      setMessage({ type: 'success', text: 'Password successfully updated!' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -270,7 +270,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
         console.warn('RPC delete_user not found, signing out instead');
         setMessage({
           type: 'error',
-          text: 'Hesap silme özelliği henüz aktif değil. Lütfen destek ile iletişime geçin.'
+          text: 'Account deletion feature is not yet active. Please contact support.'
         });
         setLoading(false);
         return;
@@ -313,7 +313,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                 isDark ? 'text-white' : 'text-slate-900'
               }`}
             >
-              Hesap Ayarları
+              Account Settings
             </h2>
             <button
               onClick={onClose}
@@ -402,7 +402,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                 }`}
               >
                 <UserCircleIcon className="w-5 h-5" />
-                Profil Bilgileri
+                Profile Information
               </h3>
 
               <div className="space-y-4">
@@ -413,7 +413,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       isDark ? 'text-slate-300' : 'text-slate-700'
                     }`}
                   >
-                    Profil Fotoğrafı
+                    Profile Picture
                   </label>
                   <div className="flex items-center gap-4">
                     {/* Avatar Preview */}
@@ -452,7 +452,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       }`}
                     >
                       <PhotoIcon className="w-5 h-5" />
-                      {uploading ? 'Yükleniyor...' : 'Resim Yükle'}
+                      {uploading ? 'Uploading...' : 'Upload Image'}
                     </button>
 
                     {avatarUrl && (
@@ -468,12 +468,12 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                             : 'bg-red-50 hover:bg-red-100 text-red-600'
                         }`}
                       >
-                        {loading ? 'Kaldırılıyor...' : 'Kaldır'}
+                        {loading ? 'Removing...' : 'Remove'}
                       </button>
                     )}
                   </div>
                   <p className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    PNG, JPG, GIF veya WebP formatında, maksimum 5MB
+                    PNG, JPG, GIF or WebP format, maximum 5MB
                   </p>
                 </div>
 
@@ -483,13 +483,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       isDark ? 'text-slate-300' : 'text-slate-700'
                     }`}
                   >
-                    Ad Soyad
+                    Full Name
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Ad Soyad"
+                    placeholder="Full Name"
                     className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
                       isDark
                         ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500'
@@ -508,7 +508,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                     : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg'
                 }`}
               >
-                {loading ? 'Güncelleniyor...' : 'Profili Güncelle'}
+                {loading ? 'Updating...' : 'Update Profile'}
               </button>
             </form>
 
@@ -521,7 +521,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                   }`}
                 >
                   <KeyIcon className="w-5 h-5" />
-                  Şifre Değiştir
+                  Change Password
                 </h3>
 
                 <div className="space-y-4">
@@ -531,13 +531,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                         isDark ? 'text-slate-300' : 'text-slate-700'
                       }`}
                     >
-                      Yeni Şifre
+                      New Password
                     </label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="En az 6 karakter"
+                      placeholder="At least 6 characters"
                       className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
                         isDark
                           ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500'
@@ -552,13 +552,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                         isDark ? 'text-slate-300' : 'text-slate-700'
                       }`}
                     >
-                      Yeni Şifre (Tekrar)
+                      New Password (Confirm)
                     </label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Şifreyi tekrar girin"
+                      placeholder="Re-enter password"
                       className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
                         isDark
                           ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500'
@@ -577,7 +577,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg'
                   }`}
                 >
-                  {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
+                  {loading ? 'Updating...' : 'Update Password'}
                 </button>
               </form>
             </div>
@@ -592,7 +592,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                 }`}
               >
                 <ExclamationTriangleIcon className="w-5 h-5" />
-                Tehlikeli Bölge
+                Danger Zone
               </h3>
 
               {!showDeleteConfirm ? (
@@ -605,7 +605,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                   }`}
                 >
                   <TrashIcon className="w-5 h-5" />
-                  Hesabı Sil
+                  Delete Account
                 </button>
               ) : (
                 <div
@@ -620,7 +620,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       isDark ? 'text-red-300' : 'text-red-700'
                     }`}
                   >
-                    ⚠️ Bu işlem geri alınamaz! Tüm verileriniz kalıcı olarak silinecektir.
+                    ⚠️ This action cannot be undone! All your data will be permanently deleted.
                   </p>
                   <div className="flex gap-3">
                     <button
@@ -632,7 +632,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                           : 'bg-red-600 hover:bg-red-700'
                       }`}
                     >
-                      {loading ? 'Siliniyor...' : 'Eminim, Sil'}
+                      {loading ? 'Deleting...' : 'Yes, Delete'}
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
@@ -642,7 +642,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                           : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
                       }`}
                     >
-                      İptal
+                      Cancel
                     </button>
                   </div>
                 </div>
