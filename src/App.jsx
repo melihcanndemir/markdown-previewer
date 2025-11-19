@@ -12,6 +12,7 @@ import UserMenu from "./components/Auth/UserMenu";
 import LoginModal from "./components/Auth/LoginModal";
 import RegisterModal from "./components/Auth/RegisterModal";
 import ResetPasswordModal from "./components/Auth/ResetPasswordModal";
+import AccountSettings from "./components/Auth/AccountSettings";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { useAuth } from "./contexts/AuthContext";
 import {
@@ -130,7 +131,7 @@ function App() {
   });
 
   // Auth Modal States
-  const [authModal, setAuthModal] = useState(''); // 'login', 'register', 'reset', ''
+  const [authModal, setAuthModal] = useState(''); // 'login', 'register', 'reset', 'account', ''
 
   // Custom theme handler
   const handleThemeChange = useCallback((theme) => {
@@ -532,6 +533,7 @@ function App() {
                 <UserMenu
                   isDark={isDark}
                   onOpenLogin={() => setAuthModal('login')}
+                  onOpenAccountSettings={() => setAuthModal('account')}
                 />
 
                 {/* Theme Toggle */}
@@ -658,6 +660,7 @@ function App() {
                 <UserMenu
                   isDark={isDark}
                   onOpenLogin={() => setAuthModal('login')}
+                  onOpenAccountSettings={() => setAuthModal('account')}
                 />
               </div>
 
@@ -839,6 +842,12 @@ function App() {
         onClose={() => setAuthModal('')}
         isDark={isDark}
         onSwitchToLogin={() => setAuthModal('login')}
+      />
+
+      <AccountSettings
+        isOpen={authModal === 'account'}
+        onClose={() => setAuthModal('')}
+        isDark={isDark}
       />
 
       {/* Footer */}
