@@ -7,6 +7,7 @@ import {
   TrashIcon,
   DocumentDuplicateIcon,
   PlusCircleIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSaveVersion, currentMarkdown, isDark }) => {
@@ -15,6 +16,8 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
   const [versionName, setVersionName] = useState('');
   const [compareMode, setCompareMode] = useState(false);
   const [compareVersionId, setCompareVersionId] = useState(null);
+  const [deleteConfirmVersion, setDeleteConfirmVersion] = useState(null);
+  const [restoreConfirmVersion, setRestoreConfirmVersion] = useState(null);
 
   if (!isOpen) return null;
 
@@ -47,26 +50,173 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
   };
 
   const handleRestore = (version) => {
-    if (window.confirm(`Are you sure you want to restore version "${version.name}"?`)) {
-      onRestore(version);
+    setRestoreConfirmVersion(version);
+  };
+
+  const confirmRestore = () => {
+    if (restoreConfirmVersion) {
+      onRestore(restoreConfirmVersion);
+      setRestoreConfirmVersion(null);
       onClose();
     }
   };
 
-  const handleDelete = (versionId) => {
-    if (window.confirm('Are you sure you want to delete this version?')) {
-      onDelete(versionId);
+  const cancelRestore = () => {
+    setRestoreConfirmVersion(null);
+  };
+
+  const handleDelete = (version) => {
+    setDeleteConfirmVersion(version);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmVersion) {
+      onDelete(deleteConfirmVersion.id);
+      setDeleteConfirmVersion(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmVersion(null);
   };
 
   const selectedVersion = selectedVersionId ? versions.find(v => v.id === selectedVersionId) : null;
   const compareVersion = compareVersionId ? versions.find(v => v.id === compareVersionId) : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4 bg-black bg-opacity-60 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <>
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmVersion && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-md rounded-xl shadow-2xl ${
+              isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 p-6 pb-4">
+              <div className={`p-3 rounded-full ${
+                isDark ? 'bg-red-500/20' : 'bg-red-100'
+              }`}>
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}>
+                  Delete Version
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
+              <p className={`text-sm ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                Are you sure you want to delete version <span className="font-semibold">&quot;{deleteConfirmVersion.name}&quot;</span>?
+              </p>
+              <p className={`text-sm mt-2 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                This action cannot be undone and the version will be permanently deleted.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className={`flex gap-3 px-6 py-4 border-t ${
+              isDark ? 'border-slate-700' : 'border-slate-200'
+            }`}>
+              <button
+                onClick={cancelDelete}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restore Confirmation Modal */}
+      {restoreConfirmVersion && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-md rounded-xl shadow-2xl ${
+              isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 p-6 pb-4">
+              <div className={`p-3 rounded-full ${
+                isDark ? 'bg-blue-500/20' : 'bg-blue-100'
+              }`}>
+                <ArrowPathIcon className="w-6 h-6 text-blue-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}>
+                  Restore Version
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
+              <p className={`text-sm ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                Are you sure you want to restore version <span className="font-semibold">&quot;{restoreConfirmVersion.name}&quot;</span>?
+              </p>
+              <p className={`text-sm mt-2 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                This will replace your current content with this version. Your current content will be lost unless you save it first.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className={`flex gap-3 px-6 py-4 border-t ${
+              isDark ? 'border-slate-700' : 'border-slate-200'
+            }`}>
+              <button
+                onClick={cancelRestore}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRestore}
+                className="flex-1 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Restore
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+        onClick={onClose}
+      >
       <div
         className={`w-full sm:max-w-5xl h-full sm:h-auto sm:max-h-[90vh] overflow-hidden sm:rounded-2xl shadow-2xl ${
           isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
@@ -204,7 +354,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(version.id);
+                            handleDelete(version);
                           }}
                           className="p-1.5 sm:p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
                           title="Delete this version"
@@ -234,6 +384,7 @@ const VersionHistory = ({ isOpen, onClose, versions, onRestore, onDelete, onSave
         </div>
       </div>
     </div>
+    </>
   );
 };
 

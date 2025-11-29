@@ -14,10 +14,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 const AccountSettings = ({ isOpen, onClose, isDark }) => {
-  const { user, updatePassword, signOut } = useAuth();
+  const { user, updatePassword, verifyPassword, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   // Profile form state
   const [fullName, setFullName] = useState('');
@@ -29,7 +30,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
   useEffect(() => {
     if (user) {
       setFullName(user.user_metadata?.full_name || '');
-      setAvatarUrl(user.user_metadata?.avatar_url || '');
+      const baseAvatarUrl = user.user_metadata?.avatar_url || '';
+      // Add cache-busting to force refresh on mount
+      if (baseAvatarUrl) {
+        setAvatarUrl(`${baseAvatarUrl}?t=${Date.now()}`);
+      } else {
+        setAvatarUrl('');
+      }
     }
   }, [user?.user_metadata?.full_name, user?.user_metadata?.avatar_url, isOpen]);
 
@@ -64,6 +71,15 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
   const initCloudinaryWidget = () => {
     if (!window.cloudinary || !user) return;
 
+    // Destroy previous widget if exists
+    if (cloudinaryWidget) {
+      try {
+        cloudinaryWidget.close();
+      } catch (e) {
+        // Widget might not be open
+      }
+    }
+
     const widget = window.cloudinary.createUploadWidget(
       {
         cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo',
@@ -77,8 +93,9 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
         croppingAspectRatio: 1,
         croppingShowDimensions: true,
 
-        // Fixed public_id per user - same filename for consistency
-        publicId: `user_${user.id}_avatar`,
+        // Use timestamp-based public_id for unique uploads
+        // Each upload gets a new file instead of overwriting (unsigned upload limitation)
+        publicId: `user_${user.id}_avatar_${Date.now()}`,
 
         folder: 'markdown-previewer/avatars',
         tags: ['avatar', 'profile'],
@@ -92,15 +109,24 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
           return;
         }
 
+        // Handle widget close event
+        if (result.event === 'close') {
+          setUploading(false);
+          return;
+        }
+
         if (result.event === 'success') {
           const newAvatarUrl = result.info.secure_url;
-          setAvatarUrl(newAvatarUrl);
-          setUploading(false);
+
+          // Add cache-busting parameter to force refresh
+          const urlWithTimestamp = `${newAvatarUrl}?t=${Date.now()}`;
+
+          setAvatarUrl(urlWithTimestamp);
 
           // Immediately update user profile in Supabase
           supabase.auth.updateUser({
             data: {
-              avatar_url: newAvatarUrl,
+              avatar_url: newAvatarUrl, // Store original URL without timestamp
             },
           }).then(({ error }) => {
             if (error) {
@@ -109,6 +135,7 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
             } else {
               setMessage({ type: 'success', text: 'Avatar successfully updated!' });
             }
+            setUploading(false);
           });
         }
       }
@@ -200,10 +227,13 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     setMessage({ type: '', text: '' });
 
     try {
+      // Remove cache-busting parameter before saving
+      const cleanAvatarUrl = avatarUrl ? avatarUrl.split('?')[0] : '';
+
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName,
-          avatar_url: avatarUrl,
+          avatar_url: cleanAvatarUrl,
         },
       });
 
@@ -222,6 +252,12 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
+    if (!currentPassword) {
+      setMessage({ type: 'error', text: 'Please enter your current password!' });
+      setLoading(false);
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setMessage({ type: 'error', text: 'New passwords do not match!' });
       setLoading(false);
@@ -235,6 +271,14 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     }
 
     try {
+      // Verify current password first
+      const { success, error: verifyError } = await verifyPassword(currentPassword);
+
+      if (!success) {
+        throw new Error(verifyError?.message || 'Current password is incorrect!');
+      }
+
+      // Update to new password
       const { error } = await updatePassword(newPassword);
       if (error) throw error;
 
@@ -253,10 +297,23 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
+    if (!deletePassword) {
+      setMessage({ type: 'error', text: 'Please enter your password to confirm!' });
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Delete user's data from Supabase (tabs)
+      // Verify password first
+      const { success, error: verifyError } = await verifyPassword(deletePassword);
+
+      if (!success) {
+        throw new Error(verifyError?.message || 'Incorrect password!');
+      }
+
+      // Delete user's data from Supabase (user_tabs)
       const { error: deleteError } = await supabase
-        .from('tabs')
+        .from('user_tabs')
         .delete()
         .eq('user_id', user.id);
 
@@ -531,6 +588,27 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                         isDark ? 'text-slate-300' : 'text-slate-700'
                       }`}
                     >
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
+                        isDark
+                          ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500'
+                          : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDark ? 'text-slate-300' : 'text-slate-700'
+                      }`}
+                    >
                       New Password
                     </label>
                     <input
@@ -570,9 +648,9 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
 
                 <button
                   type="submit"
-                  disabled={loading || !newPassword || !confirmPassword}
+                  disabled={loading || !currentPassword || !newPassword || !confirmPassword}
                   className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white transition-all ${
-                    loading || !newPassword || !confirmPassword
+                    loading || !currentPassword || !newPassword || !confirmPassword
                       ? 'bg-slate-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg'
                   }`}
@@ -622,12 +700,35 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                   >
                     ⚠️ This action cannot be undone! All your data will be permanently deleted.
                   </p>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDark ? 'text-red-300' : 'text-red-700'
+                      }`}
+                    >
+                      Enter your password to confirm
+                    </label>
+                    <input
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="Your password"
+                      className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${
+                        isDark
+                          ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-red-500'
+                          : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-red-500'
+                      } focus:outline-none focus:ring-2 focus:ring-red-500/20`}
+                      autoFocus
+                    />
+                  </div>
+
                   <div className="flex gap-3">
                     <button
                       onClick={handleDeleteAccount}
-                      disabled={loading}
+                      disabled={loading || !deletePassword}
                       className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-white transition-all ${
-                        loading
+                        loading || !deletePassword
                           ? 'bg-slate-500 cursor-not-allowed'
                           : 'bg-red-600 hover:bg-red-700'
                       }`}
@@ -635,7 +736,11 @@ const AccountSettings = ({ isOpen, onClose, isDark }) => {
                       {loading ? 'Deleting...' : 'Yes, Delete'}
                     </button>
                     <button
-                      onClick={() => setShowDeleteConfirm(false)}
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeletePassword('');
+                      }}
+                      disabled={loading}
                       className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-colors ${
                         isDark
                           ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'

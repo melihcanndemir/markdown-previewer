@@ -92,6 +92,24 @@ export const AuthProvider = ({ children }) => {
     return { data, error };
   };
 
+  // Verify current password by attempting re-authentication
+  const verifyPassword = async (password) => {
+    if (!user?.email) {
+      return { success: false, error: { message: 'No user email found' } };
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: password,
+    });
+
+    if (error) {
+      return { success: false, error };
+    }
+
+    return { success: true, error: null };
+  };
+
   // Update password
   const updatePassword = async (newPassword) => {
     const { data, error } = await supabase.auth.updateUser({
@@ -182,6 +200,7 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle,
     signOut,
     resetPassword,
+    verifyPassword,
     updatePassword,
     syncToCloud,
     fetchFromCloud,

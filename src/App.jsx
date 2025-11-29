@@ -116,6 +116,11 @@ function App() {
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const editorRef = useRef(null);
+  
+  // Sync scrolling refs
+  const editorScrollRef = useRef(null);
+  const previewScrollRef = useRef(null);
+  const isScrollingRef = useRef(false);
 
   // Keyboard Shortcuts Panel state
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -123,12 +128,15 @@ function App() {
   // Theme Customizer state
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
-  // Version History state
+  // Version History state (per tab)
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
-  const [versions, setVersions] = useState(() => {
-    const saved = localStorage.getItem("markdown-versions");
-    return saved ? JSON.parse(saved) : [];
+  const [tabVersions, setTabVersions] = useState(() => {
+    const saved = localStorage.getItem("tab-versions");
+    return saved ? JSON.parse(saved) : {};
   });
+
+  // Get versions for active tab
+  const versions = tabVersions[activeTabId] || [];
 
   // Auth Modal States
   const [authModal, setAuthModal] = useState(''); // 'login', 'register', 'reset', 'account', ''
@@ -171,6 +179,14 @@ function App() {
       deleteTabFromCloudById(tabId);
     }
 
+    // Remove version history for this tab
+    setTabVersions(prev => {
+      const updated = { ...prev };
+      delete updated[tabId];
+      localStorage.setItem("tab-versions", JSON.stringify(updated));
+      return updated;
+    });
+
     // Switch to adjacent tab if closing active tab
     if (tabId === activeTabId) {
       const newActiveIndex = Math.min(tabIndex, newTabs.length - 1);
@@ -196,7 +212,7 @@ function App() {
     });
   }, [user, syncSingleTabToCloud]);
 
-  // Version Management
+  // Version Management (per tab)
   const handleSaveVersion = useCallback((name) => {
     const newVersion = {
       id: `version-${Date.now()}`,
@@ -207,9 +223,15 @@ function App() {
     };
 
     const updatedVersions = [newVersion, ...versions];
-    setVersions(updatedVersions);
-    localStorage.setItem("markdown-versions", JSON.stringify(updatedVersions));
-  }, [markdown, versions]);
+    setTabVersions(prev => {
+      const updated = {
+        ...prev,
+        [activeTabId]: updatedVersions
+      };
+      localStorage.setItem("tab-versions", JSON.stringify(updated));
+      return updated;
+    });
+  }, [markdown, versions, activeTabId]);
 
   const handleRestoreVersion = useCallback((version) => {
     setMarkdown(version.content);
@@ -217,14 +239,20 @@ function App() {
 
   const handleDeleteVersion = useCallback((versionId) => {
     const updatedVersions = versions.filter(v => v.id !== versionId);
-    setVersions(updatedVersions);
-    localStorage.setItem("markdown-versions", JSON.stringify(updatedVersions));
-  }, [versions]);
+    setTabVersions(prev => {
+      const updated = {
+        ...prev,
+        [activeTabId]: updatedVersions
+      };
+      localStorage.setItem("tab-versions", JSON.stringify(updated));
+      return updated;
+    });
+  }, [versions, activeTabId]);
 
   // Save versions to localStorage when they change
   useEffect(() => {
-    localStorage.setItem("markdown-versions", JSON.stringify(versions));
-  }, [versions]);
+    localStorage.setItem("tab-versions", JSON.stringify(tabVersions));
+  }, [tabVersions]);
 
   // Responsive Layout Management
   const handleResize = useCallback(() => {
@@ -762,6 +790,9 @@ function App() {
                     setIsEditorExpanded(!isEditorExpanded);
                     if (isPreviewExpanded) setIsPreviewExpanded(false);
                   }}
+                  editorScrollRef={editorScrollRef}
+                  previewScrollRef={previewScrollRef}
+                  isScrollingRef={isScrollingRef}
                 />
               )}
               {!isEditorExpanded && (
@@ -774,6 +805,9 @@ function App() {
                     setIsPreviewExpanded(!isPreviewExpanded);
                     if (isEditorExpanded) setIsEditorExpanded(false);
                   }}
+                  editorScrollRef={editorScrollRef}
+                  previewScrollRef={previewScrollRef}
+                  isScrollingRef={isScrollingRef}
                 />
               )}
             </div>
