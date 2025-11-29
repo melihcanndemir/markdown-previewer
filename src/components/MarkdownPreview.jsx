@@ -12,6 +12,7 @@ import {
   oneLight,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeRaw from "rehype-raw";
+import { useEffect, useRef, useCallback } from "react";
 
 function MarkdownPreview({
   markdown,
@@ -19,6 +20,9 @@ function MarkdownPreview({
   settings,
   isFullScreen,
   onFullScreenToggle,
+  editorScrollRef,
+  previewScrollRef,
+  isScrollingRef,
 }) {
   // Get current theme (custom or preset)
   const isCustomTheme = settings.previewStyle === 'custom' && settings.customTheme;
@@ -40,6 +44,53 @@ function MarkdownPreview({
     codeBackground: isDark ? baseTheme.codeBackgroundDark : baseTheme.codeBackground,
     borderColor: isDark ? baseTheme.borderColorDark : baseTheme.borderColor,
   };
+  const previewContentRef = useRef(null);
+
+  const handlePreviewScroll = useCallback(() => {
+    // Sync scroll with editor if enabled
+    if (settings.syncScroll && !isScrollingRef?.current && editorScrollRef?.current) {
+      isScrollingRef.current = true;
+      
+      const previewElement = previewContentRef.current;
+      if (!previewElement) return;
+      
+      // Calculate scroll percentage
+      const scrollPercentage = previewElement.scrollTop / (previewElement.scrollHeight - previewElement.clientHeight);
+      
+      // Apply to editor
+      const editorElement = editorScrollRef.current;
+      const maxScroll = editorElement.scrollHeight - editorElement.clientHeight;
+      editorElement.scrollTop = scrollPercentage * maxScroll;
+      
+      // Reset flag after a short delay
+      setTimeout(() => {
+        if (isScrollingRef) {
+          isScrollingRef.current = false;
+        }
+      }, 50);
+    }
+  }, [settings.syncScroll, editorScrollRef, isScrollingRef]);
+
+  useEffect(() => {
+    const previewElement = previewContentRef.current;
+    if (!previewElement) return;
+
+    // Store ref for sync scrolling
+    if (previewScrollRef) {
+      previewScrollRef.current = previewElement;
+    }
+
+    if (settings.syncScroll) {
+      previewElement.addEventListener("scroll", handlePreviewScroll);
+    }
+
+    return () => {
+      if (settings.syncScroll) {
+        previewElement.removeEventListener("scroll", handlePreviewScroll);
+      }
+    };
+  }, [settings.syncScroll, handlePreviewScroll, previewScrollRef]);
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -88,6 +139,7 @@ function MarkdownPreview({
       </div>
 
       <div
+        ref={previewContentRef}
         data-preview-content
         className={`
           prose
@@ -250,9 +302,13 @@ MarkdownPreview.propTypes = {
   settings: PropTypes.shape({
     fontSize: PropTypes.string.isRequired,
     previewStyle: PropTypes.string.isRequired,
+    syncScroll: PropTypes.bool,
   }).isRequired,
   isFullScreen: PropTypes.bool.isRequired,
   onFullScreenToggle: PropTypes.func.isRequired,
+  editorScrollRef: PropTypes.object,
+  previewScrollRef: PropTypes.object,
+  isScrollingRef: PropTypes.object,
 };
 
 export default MarkdownPreview;

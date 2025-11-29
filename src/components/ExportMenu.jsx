@@ -179,7 +179,7 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification, tabs, acti
     }
   };
 
-  // Export as PDF
+  // Export as PDF - OPTIMIZED VERSION (Always white background)
   const exportPDF = async () => {
     try {
       setIsExporting(true);
@@ -189,63 +189,147 @@ const ExportMenu = ({ markdown, isDark, previewStyle, onNotification, tabs, acti
         throw new Error('Preview content not found');
       }
 
-      // Create a temporary container for better PDF rendering
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.width = '210mm'; // A4 width
-      container.style.padding = '20mm';
-      container.style.background = isDark ? '#1e293b' : '#ffffff';
-      container.style.color = isDark ? '#e2e8f0' : '#1e293b';
-      container.innerHTML = previewElement.innerHTML;
-      document.body.appendChild(container);
-
-      // Convert to canvas
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        logging: false,
-      });
-
-      // Remove temporary container
-      document.body.removeChild(container);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10; // Küçültülmüş margin
+      const contentWidth = pageWidth - (margin * 2);
+      const contentHeight = pageHeight - (margin * 2);
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Container - HER ZAMAN BEYAZ
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-99999px';
+      container.style.width = '750px';
+      container.style.padding = '38px';
+      container.style.boxSizing = 'border-box';
+      container.style.background = '#ffffff'; // HER ZAMAN BEYAZ
+      container.style.color = '#1e293b'; // HER ZAMAN KOYU METİN
+      container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      container.style.fontSize = '8px'; // 8px FONT
+      container.style.lineHeight = '1.4';
 
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      // İçeriği klonla
+      const content = previewElement.cloneNode(true);
+      
+      // TÜM ELEMENTLERİ BEYAZ TEMA İÇİN DÜZENLEYİP
+      const allElements = content.querySelectorAll('*');
+      allElements.forEach(el => {
+        el.style.color = '#1e293b'; // Koyu metin
+        el.style.backgroundColor = 'transparent';
+        
+        // Code blokları için açık gri arka plan
+        if (el.tagName === 'PRE' || el.tagName === 'CODE') {
+          el.style.backgroundColor = '#f1f5f9';
+          el.style.color = '#1e293b';
+        }
+        
+        // Linkler için mor renk
+        if (el.tagName === 'A') {
+          el.style.color = '#a855f7';
+        }
+        
+        // Tablolar için border
+        if (el.tagName === 'TH' || el.tagName === 'TD') {
+          el.style.borderColor = '#cbd5e1';
+        }
+        if (el.tagName === 'TH') {
+          el.style.backgroundColor = '#f1f5f9';
+        }
+        
+        // Blockquote için açık gri
+        if (el.tagName === 'BLOCKQUOTE') {
+          el.style.color = '#64748b';
+          el.style.borderLeftColor = '#a855f7';
+        }
+      });
+      
+      // Başlıkları küçült
+      const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      headings.forEach(h => {
+        const currentSize = parseFloat(window.getComputedStyle(h).fontSize);
+        h.style.fontSize = (currentSize * 0.85) + 'px';
+        h.style.marginTop = '12px';
+        h.style.marginBottom = '8px';
+        h.style.color = '#1e293b';
+      });
 
-      // Add additional pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      // Paragrafları optimize et
+      const paragraphs = content.querySelectorAll('p, li');
+      paragraphs.forEach(p => {
+        p.style.marginTop = '6px';
+        p.style.marginBottom = '6px';
+        p.style.color = '#1e293b';
+      });
+
+      container.appendChild(content);
+      document.body.appendChild(container);
+
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // Render - HER ZAMAN BEYAZ ARKA PLAN
+      const fullCanvas = await html2canvas(container, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#ffffff', // HER ZAMAN BEYAZ
+        logging: false,
+        windowWidth: container.scrollWidth,
+        windowHeight: container.scrollHeight,
+      });
+
+      document.body.removeChild(container);
+
+      // Sayfalama
+      const canvasWidth = fullCanvas.width;
+      const canvasPageHeight = (contentHeight / contentWidth) * canvasWidth;
+      
+      let currentY = 0;
+      let pageNum = 0;
+
+      while (currentY < fullCanvas.height) {
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+
+        const remainingHeight = fullCanvas.height - currentY;
+        const thisPageHeight = Math.min(canvasPageHeight, remainingHeight);
+
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvasWidth;
+        pageCanvas.height = thisPageHeight;
+        
+        const ctx = pageCanvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; // HER ZAMAN BEYAZ
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        ctx.drawImage(
+          fullCanvas,
+          0, currentY,
+          canvasWidth, thisPageHeight,
+          0, 0,
+          canvasWidth, thisPageHeight
+        );
+
+        const imgData = pageCanvas.toDataURL('image/png', 0.95);
+        const pdfImgHeight = (thisPageHeight / canvasWidth) * contentWidth;
+        
+        pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, pdfImgHeight);
+
+        currentY += thisPageHeight;
+        pageNum++;
       }
 
-      // Save PDF
       pdf.save(`document-${Date.now()}.pdf`);
+      onNotification?.('PDF oluşturuldu - sayfa geçişlerinde küçük kesintiler olabilir', 'success');
 
-      onNotification?.('PDF exported successfully', 'success');
     } catch (error) {
       console.error('PDF export error:', error);
-      onNotification?.('Failed to export PDF', 'error');
+      onNotification?.('PDF oluşturulamadı: ' + error.message, 'error');
     } finally {
       setIsExporting(false);
       setIsOpen(false);

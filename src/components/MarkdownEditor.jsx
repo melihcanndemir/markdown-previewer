@@ -258,6 +258,9 @@ function MarkdownEditor({
   settings,
   isFullScreen,
   onFullScreenToggle,
+  editorScrollRef,
+  previewScrollRef,
+  isScrollingRef,
 }) {
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
@@ -376,11 +379,34 @@ function MarkdownEditor({
     if (textarea && lineNumbers) {
       lineNumbers.scrollTop = textarea.scrollTop;
     }
-  }, []);
+
+    // Sync scroll with preview if enabled
+    if (settings.syncScroll && !isScrollingRef.current && previewScrollRef?.current) {
+      isScrollingRef.current = true;
+      
+      // Calculate scroll percentage
+      const scrollPercentage = textarea.scrollTop / (textarea.scrollHeight - textarea.clientHeight);
+      
+      // Apply to preview
+      const previewElement = previewScrollRef.current;
+      const maxScroll = previewElement.scrollHeight - previewElement.clientHeight;
+      previewElement.scrollTop = scrollPercentage * maxScroll;
+      
+      // Reset flag after a short delay
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 50);
+    }
+  }, [settings.syncScroll, previewScrollRef, isScrollingRef]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
+
+    // Store ref for sync scrolling
+    if (editorScrollRef) {
+      editorScrollRef.current = textarea;
+    }
 
     textarea.addEventListener("scroll", handleScroll);
     textarea.addEventListener("input", handleScroll);
@@ -393,7 +419,7 @@ function MarkdownEditor({
       textarea.removeEventListener("input", handleScroll);
       window.removeEventListener("resize", handleScroll);
     };
-  }, [handleScroll]);
+  }, [handleScroll, editorScrollRef]);
 
   const scrollbarClasses = isDark
     ? "scrollbar-modern-dark"
@@ -531,9 +557,13 @@ MarkdownEditor.propTypes = {
     showLineNumbers: PropTypes.bool.isRequired,
     showToolbar: PropTypes.bool.isRequired,
     editorHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    syncScroll: PropTypes.bool,
   }).isRequired,
   isFullScreen: PropTypes.bool.isRequired,
   onFullScreenToggle: PropTypes.func.isRequired,
+  editorScrollRef: PropTypes.object,
+  previewScrollRef: PropTypes.object,
+  isScrollingRef: PropTypes.object,
 };
 
 export default MarkdownEditor;

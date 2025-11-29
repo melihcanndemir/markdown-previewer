@@ -7,6 +7,7 @@ import {
   PlusCircleIcon,
   TrashIcon,
   XMarkIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { TEMPLATE_PRESETS } from './templates';
 
@@ -18,6 +19,7 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
   });
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
+  const [templateToLoad, setTemplateToLoad] = useState(null);
   const menuRef = useRef(null);
 
   // Close menu when clicking outside
@@ -44,14 +46,24 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
 
   const handleTemplateSelect = (template) => {
     if (currentMarkdown && currentMarkdown.trim() !== '') {
-      const confirmed = window.confirm(
-        'Loading a template will replace your current content. Are you sure?'
-      );
-      if (!confirmed) return;
+      setTemplateToLoad(template);
+      return;
     }
 
     onLoadTemplate(template.content);
     setIsOpen(false);
+  };
+
+  const confirmLoadTemplate = () => {
+    if (templateToLoad) {
+      onLoadTemplate(templateToLoad.content);
+      setTemplateToLoad(null);
+      setIsOpen(false);
+    }
+  };
+
+  const cancelLoadTemplate = () => {
+    setTemplateToLoad(null);
   };
 
   const handleSaveCustomTemplate = () => {
@@ -103,7 +115,72 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
   }, {});
 
   return (
-    <div className="relative" ref={menuRef}>
+    <>
+      {/* Template Load Confirmation Modal */}
+      {templateToLoad && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-md rounded-xl shadow-2xl ${
+              isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 p-6 pb-4">
+              <div className={`p-3 rounded-full ${
+                isDark ? 'bg-amber-500/20' : 'bg-amber-100'
+              }`}>
+                <ExclamationTriangleIcon className="w-6 h-6 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}>
+                  Load Template
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
+              <p className={`text-sm ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                Loading <span className="font-semibold">&quot;{templateToLoad.name}&quot;</span> will replace your current content.
+              </p>
+              <p className={`text-sm mt-2 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                This action cannot be undone. Are you sure you want to continue?
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className={`flex gap-3 px-6 py-4 border-t ${
+              isDark ? 'border-slate-700' : 'border-slate-200'
+            }`}>
+              <button
+                onClick={cancelLoadTemplate}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLoadTemplate}
+                className="flex-1 px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Load Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all duration-200 ${
@@ -267,6 +344,7 @@ const TemplateMenu = ({ onLoadTemplate, isDark, currentMarkdown }) => {
         </>
       )}
     </div>
+    </>
   );
 };
 

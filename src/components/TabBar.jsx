@@ -5,11 +5,13 @@ import {
   PlusIcon,
   PencilIcon,
   CheckIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRename, isDark }) => {
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [tabToClose, setTabToClose] = useState(null);
 
   const handleStartEdit = (tab, e) => {
     e.stopPropagation();
@@ -38,10 +40,91 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
     }
   };
 
+  const handleCloseTab = (e, tab) => {
+    e.stopPropagation();
+    setTabToClose(tab);
+  };
+
+  const confirmCloseTab = () => {
+    if (tabToClose) {
+      onTabClose(tabToClose.id);
+      setTabToClose(null);
+    }
+  };
+
+  const cancelCloseTab = () => {
+    setTabToClose(null);
+  };
+
   return (
-    <div className={`flex items-center gap-1 sm:gap-2 overflow-x-auto ${
-      isDark ? 'bg-slate-900 scrollbar-modern-dark' : 'bg-slate-200 scrollbar-modern'
-    } px-2 py-1 rounded-t-lg`}>
+    <>
+      {/* Delete Confirmation Modal */}
+      {tabToClose && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-md rounded-xl shadow-2xl ${
+              isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 p-6 pb-4">
+              <div className={`p-3 rounded-full ${
+                isDark ? 'bg-amber-500/20' : 'bg-amber-100'
+              }`}>
+                <ExclamationTriangleIcon className="w-6 h-6 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}>
+                  Close Tab
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-6">
+              <p className={`text-sm ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              }`}>
+                Are you sure you want to close <span className="font-semibold">&quot;{tabToClose.name}&quot;</span>?
+              </p>
+              <p className={`text-sm mt-2 ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
+                This action cannot be undone and the tab content will be permanently deleted.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className={`flex gap-3 px-6 py-4 border-t ${
+              isDark ? 'border-slate-700' : 'border-slate-200'
+            }`}>
+              <button
+                onClick={cancelCloseTab}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmCloseTab}
+                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Close Tab
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex items-center gap-1 sm:gap-2 overflow-x-auto ${
+        isDark ? 'bg-slate-900 scrollbar-modern-dark' : 'bg-slate-200 scrollbar-modern'
+      } px-2 py-1 rounded-t-lg`}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTabId;
         const isEditing = editingTabId === tab.id;
@@ -109,10 +192,7 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
                   </button>
                   {tabs.length > 1 && (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTabClose(tab.id);
-                      }}
+                      onClick={(e) => handleCloseTab(e, tab)}
                       className={`p-0.5 sm:p-1 rounded transition-colors ${
                         isDark ? 'hover:bg-red-500/20 active:bg-red-500/30' : 'hover:bg-red-500/20 active:bg-red-500/30'
                       }`}
@@ -143,6 +223,7 @@ const TabBar = ({ tabs, activeTabId, onTabChange, onTabClose, onTabAdd, onTabRen
         <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     </div>
+    </>
   );
 };
 
